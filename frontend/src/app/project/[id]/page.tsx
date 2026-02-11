@@ -21,7 +21,7 @@ export default function ProjectDetail() {
 
   const handleJoin = async () => {
     const userSession = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!userSession.id) return router.push("/auth");
+    if (!userSession.id) return router.push("/auth/login");
 
     setJoining(true);
     try {

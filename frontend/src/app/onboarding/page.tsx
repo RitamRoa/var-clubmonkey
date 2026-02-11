@@ -26,7 +26,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user.id) router.push("/auth");
+    if (!user.id) router.push("/auth/login");
     setUserId(user.id);
   }, []);
 

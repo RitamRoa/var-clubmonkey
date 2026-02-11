@@ -15,7 +15,7 @@ export default function ProfilePage() {
         // 1. Get the session INSIDE the function to ensure it exists
         const rawSession = localStorage.getItem("user");
         if (!rawSession) {
-          router.push("/auth");
+          router.push("/auth/login");
           return;
         }
 

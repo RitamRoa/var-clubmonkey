@@ -16,7 +16,7 @@ function JoinContent() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.id) {
-      router.push("/auth");
+      router.push("/auth/login");
     } else {
       setUserId(user.id);
     }

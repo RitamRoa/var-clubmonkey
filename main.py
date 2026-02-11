@@ -132,7 +132,7 @@ class PreferencesUpdate(BaseModel):
 
 @app.get("/")
 async def health_check():
-    return {"status": "online", "timestamp": datetime.datetime.now()}
+    return {"status": "online", "timestamp": datetime.now()}
 
 @app.get("/users", response_model=List[UserSchema])
 def get_users(db: Session = Depends(get_db)):

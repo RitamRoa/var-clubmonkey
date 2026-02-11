@@ -2,9 +2,16 @@ import React from "react";
 import Link from "next/link";
 const page = () => {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
-      <Link href="/auth" className="border-2 pt-2 pb-2 pr-2 pl-2">
-        Go to auth page
+    <div className="min-h-screen bg-[#121212] flex flex-col justify-center items-center gap-4">
+      <div className="text-center mb-8">
+        <h1 className="text-5xl font-bold text-white mb-2">ClubMonkey</h1>
+        <p className="text-zinc-400">Connect. Collaborate. Create.</p>
+      </div>
+      <Link href="/auth/login" className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all">
+        Sign In
+      </Link>
+      <Link href="/auth/signup" className="px-8 py-3 border-2 border-zinc-700 text-zinc-300 font-bold rounded-lg hover:bg-zinc-800 transition-all">
+        Create Account
       </Link>
     </div>
   );

@@ -29,7 +29,7 @@ export default function Dashboard() {
   useEffect(() => {
     const userSession = JSON.parse(localStorage.getItem("user") || "{}");
     if (!userSession.id) {
-      router.push("/auth");
+      router.push("/auth/login");
       return;
     }
 
