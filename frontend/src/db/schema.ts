@@ -71,7 +71,7 @@ export const projects = pgTable("projects", {
   requirements: jsonb("requirements").$type<string[]>().default([]),
   status: text("status").default("open"),
   startDate: timestamp("start_date"),
-  contactInfo: text("contact_info").notNull(),
+  contactInfo: text("contact_info").default(""),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

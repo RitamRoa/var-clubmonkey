@@ -29,6 +29,34 @@
       "when": 1770557831930,
       "tag": "0003_sudden_talos",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1770784898990,
+      "tag": "0004_eminent_paladin",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770784959195,
+      "tag": "0005_hard_randall",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770784983287,
+      "tag": "0006_supreme_sally_floyd",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770785064546,
+      "tag": "0007_steady_clint_barton",
+      "breakpoints": true
     }
   ]
 }

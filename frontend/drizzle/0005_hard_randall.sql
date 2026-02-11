@@ -1,0 +1,1 @@
+ALTER TABLE "projects" ALTER COLUMN "contact_info" DROP NOT NULL;
