@@ -4,13 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  image?: string;
-}
-
 interface Club {
   id: number;
   name: string;
@@ -19,12 +12,29 @@ interface Club {
   tags: string[];
 }
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+}
+
 export default function Dashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [allClubs, setAllClubs] = useState<Club[]>([]);
   const [recommendedClubs, setRecommendedClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Mock feed data
+  const mockFeedItems = [
+    { id: 1, title: "Getting Started with Coding", author: "TechGuru", category: "Tech" },
+    { id: 2, title: "Design Tips for Beginners", author: "CreativeMinds", category: "Design" },
+    { id: 3, title: "Project Management Hacks", author: "ProductPro", category: "Business" },
+    { id: 4, title: "Advanced React Patterns", author: "CodeMaster", category: "Tech" },
+    { id: 5, title: "UI/UX Best Practices", author: "DesignerLife", category: "Design" },
+    { id: 6, title: "Leadership in Teams", author: "LeadOn", category: "Business" },
+  ];
 
   useEffect(() => {
     const userSession = JSON.parse(localStorage.getItem("user") || "{}");
@@ -61,7 +71,7 @@ export default function Dashboard() {
   if (loading)
     return (
       <div className="h-screen bg-[#030303] flex items-center justify-center text-zinc-500">
-        Loading Reddit Hub...
+        Loading ClubMonkey...
       </div>
     );
 
@@ -118,9 +128,9 @@ export default function Dashboard() {
       </header>
 
       {/* THREE COLUMN LAYOUT */}
-      <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 p-4">
-        {/* LEFT COLUMN: ALL CLUBS */}
-        <section className="lg:col-span-3 space-y-4">
+      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 p-4">
+        {/* LEFT COLUMN: ALL COMMUNITIES */}
+        <section className="space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 px-2">
             All Communities
           </h2>
@@ -139,83 +149,106 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* MIDDLE COLUMN: ALL USERS */}
-        <section className="lg:col-span-5 space-y-4">
+        {/* MIDDLE COLUMN: YOUR FEED */}
+        <section className="space-y-4">
           <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 px-2">
-            Active Redditors
+            Your Feed
           </h2>
-          <div className="space-y-3">
-            {users.map((user) => (
+          <div className="space-y-4">
+            {mockFeedItems.map((item) => (
               <div
-                key={user.id}
-                className="bg-[#1A1A1B] border border-[#343536] rounded p-4 flex items-center justify-between hover:border-zinc-500 transition-colors"
+                key={item.id}
+                className="bg-[#1A1A1B] border border-[#343536] rounded p-4 hover:border-zinc-500 transition-colors cursor-pointer"
               >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={
-                      user.image ||
-                      `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.name}`
-                    }
-                    className="w-10 h-10 rounded bg-zinc-800"
-                    alt="avatar"
-                  />
-                  <div>
-                    <p className="text-sm font-bold underline decoration-red-900">
-                      u/{user.name}
-                    </p>
-                    <p className="text-xs text-zinc-500">{user.email}</p>
-                  </div>
+                <div className="flex items-start justify-between mb-2">
+                  <span className="text-[11px] font-bold bg-red-600 text-white px-2 py-1 rounded">
+                    {item.category}
+                  </span>
                 </div>
-                <button className="text-xs bg-[#D7DADC] text-black font-bold px-4 py-1.5 rounded-full hover:bg-white">
-                  Follow
-                </button>
+                <h3 className="text-sm font-bold text-white mb-2 line-clamp-2 hover:text-red-500 transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-zinc-400">by {item.author}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* RIGHT COLUMN: RECOMMENDED CLUBS */}
-        <section className="lg:col-span-4 space-y-4">
-          <div className="bg-[#1A1A1B] border border-[#343536] rounded p-4">
-            <h2 className="text-sm font-bold mb-4">Recommended for You</h2>
-            <div className="space-y-4">
-              {recommendedClubs.length > 0 ? (
-                recommendedClubs.map((club) => (
-                  <Link
-                    key={club.id}
-                    href={`/clubs/${club.id}`}
-                    className="group block"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="w-2 h-10 rounded"
-                        style={{ backgroundColor: club.accent_color }}
-                      ></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold group-hover:text-red-500 transition-colors">
-                          r/{club.name}
-                        </p>
-                        <p className="text-xs text-zinc-400 line-clamp-2">
-                          {club.description}
-                        </p>
-                      </div>
+        {/* RIGHT COLUMN: RECOMMENDED FOR YOU + ACTIVE MEMBERS */}
+        <section className="space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 px-2">
+            Recommended for You
+          </h2>
+          <div className="bg-[#1A1A1B] border border-[#343536] rounded p-4 space-y-4">
+            {recommendedClubs.length > 0 ? (
+              recommendedClubs.map((club) => (
+                <Link
+                  key={club.id}
+                  href={`/clubs/${club.id}`}
+                  className="group block border-b border-[#343536] pb-4 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-2 h-10 rounded"
+                      style={{ backgroundColor: club.accent_color }}
+                    ></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold group-hover:text-red-500 transition-colors">
+                        r/{club.name}
+                      </p>
+                      <p className="text-xs text-zinc-400 line-clamp-2">
+                        {club.description}
+                      </p>
                     </div>
-                    <div className="flex gap-1 mt-2 flex-wrap">
-                      {club.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[9px] bg-[#272729] text-zinc-400 px-2 py-0.5 rounded"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <p className="text-xs text-zinc-500">No matches found.</p>
-              )}
-            </div>
+                  </div>
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {club.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[9px] bg-[#272729] text-zinc-400 px-2 py-0.5 rounded"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <p className="text-xs text-zinc-500">No matches found.</p>
+            )}
+          </div>
+
+          {/* ACTIVE MEMBERS */}
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 px-2">
+            Active Members
+          </h2>
+          <div className="space-y-3">
+            {users.map((user) => (
+              <div
+                key={user.id}
+                className="bg-[#1A1A1B] border border-[#343536] rounded p-3 flex items-center justify-between hover:border-zinc-500 transition-colors"
+              >
+                <div className="flex items-center gap-2 flex-1">
+                  <img
+                    src={
+                      user.image ||
+                      `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.name}`
+                    }
+                    className="w-8 h-8 rounded bg-zinc-800"
+                    alt="avatar"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">
+                      u/{user.name}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+                <button className="text-[10px] bg-red-600 hover:bg-red-700 text-white font-bold px-2 py-1 rounded whitespace-nowrap ml-2">
+                  Follow
+                </button>
+              </div>
+            ))}
           </div>
         </section>
       </main>
