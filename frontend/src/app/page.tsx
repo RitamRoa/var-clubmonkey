@@ -7,11 +7,11 @@ const page = () => {
         <h1 className="text-5xl font-bold text-white mb-2">ClubMonkey</h1>
         <p className="text-zinc-400">Connect. Collaborate. Create.</p>
       </div>
-      <Link href="/auth/login" className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all">
-        Sign In
-      </Link>
-      <Link href="/auth/signup" className="px-8 py-3 border-2 border-zinc-700 text-zinc-300 font-bold rounded-lg hover:bg-zinc-800 transition-all">
-        Create Account
+      <Link
+        href="/auth"
+        className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all"
+      >
+        Get Started
       </Link>
     </div>
   );

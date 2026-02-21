@@ -7,8 +7,10 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
+from google.oauth2 import id_token
+from google.auth.transport import requests
  
- 
+GOOGLE_CLIENT_ID = "293357637102-ddj6m9adt97cquei9ameuqirjks3tfju.apps.googleusercontent.com"
 DATABASE_URL = "postgresql+psycopg2://neondb_owner:npg_YrsM3yKIRxH0@ep-orange-cell-ah07255h-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 engine = create_engine(
     DATABASE_URL,
@@ -23,10 +25,9 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(String, primary_key=True)
+    id = Column(String, primary_key=True) # This will store the Google 'sub' (unique ID)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
-    password = Column(String) # <--- Add this
     image = Column(String)
     preferences = Column(JSON, server_default='[]')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -91,13 +92,15 @@ def get_db():
         db.close()
 
  
+class GoogleAuthRequest(BaseModel):
+    token: str
+
 class UserSchema(BaseModel):
     id: str
     name: str
     email: str
     image: Optional[str] = None
     preferences: List[str] = []
-     
     created_at: datetime 
     class Config: from_attributes = True
 
@@ -134,6 +137,50 @@ class PreferencesUpdate(BaseModel):
 async def health_check():
     return {"status": "online", "timestamp": datetime.now()}
 
+import firebase_admin
+from firebase_admin import auth as firebase_auth, credentials
+
+# Initialize Firebase Admin (Only once)
+if not firebase_admin._apps:
+    # Use default credentials or download service-account.json from Firebase Console
+    cred = credentials.Certificate("service-account.json") 
+    firebase_admin.initialize_app(cred)
+
+@app.post("/auth/google", response_model=UserSchema)
+def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
+    try:
+        # Verify using Firebase Admin instead of generic Google library
+        decoded_token = firebase_auth.verify_id_token(data.token)
+        
+        google_id = decoded_token['uid']
+        email = decoded_token['email']
+        name = decoded_token.get('name', 'User')
+        picture = decoded_token.get('picture')
+
+        user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            user = User(
+                id=google_id,
+                name=name,
+                email=email,
+                image=picture,
+                preferences=[]
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        return user
+
+    except Exception as e:
+        print(f"Auth Error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Firebase Token"
+        )
+
+
 @app.get("/users", response_model=List[UserSchema])
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
@@ -142,49 +189,7 @@ def get_users(db: Session = Depends(get_db)):
 def get_clubs(db: Session = Depends(get_db)):
     return db.query(Club).all()
 
-@app.post("/signup", response_model=UserSchema)
-def signup(user_data: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Email already registered"
-        )
-    
-     
-    new_user = User(
-        id=user_data.id,
-        name=user_data.name,
-        email=user_data.email,
-        password=user_data.password,  
-        image=None,
-        preferences=[]
-    )
-    
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
 
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-
-
-@app.post("/login", response_model=UserSchema)
-def login(login_data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == login_data.email).first()
-    
-     
-    if not user or user.password != login_data.password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-    
-    return user
 
 @app.put("/users/preferences", response_model=UserSchema)
 def update_preferences(data: PreferencesUpdate, db: Session = Depends(get_db)):
