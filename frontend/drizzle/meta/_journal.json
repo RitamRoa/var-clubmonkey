@@ -57,6 +57,13 @@
       "when": 1770785064546,
       "tag": "0007_steady_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773246992459,
+      "tag": "0008_late_shocker",
+      "breakpoints": true
     }
   ]
 }

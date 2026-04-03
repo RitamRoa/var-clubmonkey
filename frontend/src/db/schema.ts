@@ -6,6 +6,7 @@ import {
   jsonb,
   integer,
   primaryKey,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -18,6 +19,7 @@ export const users = pgTable("users", {
   password: text("password"), // <--- Add this line
   image: text("image"),
   preferences: jsonb("preferences").$type<string[]>().default([]),
+  isAdmin: boolean("is_admin").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
