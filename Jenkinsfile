@@ -86,9 +86,12 @@ Add:  Name=PYTHON_EXE   Value=<the path from above>
                     .venv\\Scripts\\python.exe -m pip install --upgrade pip
                     .venv\\Scripts\\python.exe -m pip install fastapi uvicorn sqlalchemy psycopg2-binary requests google-auth firebase-admin httpx pytest ruff
                 '''
+                // Copy secret file (gitignored) from source repo into workspace
+                bat 'if not exist service-account.json copy "C:\\Users\\Sambhav\\Desktop\\onHold\\var-clubmonkey\\service-account.json" service-account.json'
                 echo "Python virtualenv ready"
             }
         }
+
 
         // ─────────────────────────────────────────────────────────────
         // STAGE 3: Lint
