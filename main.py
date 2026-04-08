@@ -7,8 +7,8 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional
-from google.oauth2 import id_token
-from google.auth.transport import requests
+import firebase_admin
+from firebase_admin import auth as firebase_auth, credentials
  
 GOOGLE_CLIENT_ID = "293357637102-ddj6m9adt97cquei9ameuqirjks3tfju.apps.googleusercontent.com"
 DATABASE_URL = "postgresql+psycopg2://neondb_owner:npg_YrsM3yKIRxH0@ep-orange-cell-ah07255h-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
@@ -109,7 +109,8 @@ class UserSchema(BaseModel):
     preferences: List[str] = []
     is_admin: bool = False  # <--- CRITICAL: Add this so the frontend can see it
     created_at: datetime 
-    class Config: from_attributes = True
+    class Config:
+        from_attributes = True
 
  
 class UserCreate(BaseModel):
@@ -126,7 +127,8 @@ class ClubSchema(BaseModel):
     primary_color: str
     accent_color: str
     tags: List[str] = []
-    class Config: from_attributes = True
+    class Config:
+        from_attributes = True
 
 class PostSchema(BaseModel):
     id: int
@@ -134,7 +136,8 @@ class PostSchema(BaseModel):
     content: str
     image_url: Optional[str]
     created_at: datetime 
-    class Config: from_attributes = True
+    class Config:
+        from_attributes = True
 
 class PreferencesUpdate(BaseModel):
     user_id: str
@@ -143,9 +146,6 @@ class PreferencesUpdate(BaseModel):
 @app.get("/")
 async def health_check():
     return {"status": "online", "timestamp": datetime.now()}
-
-import firebase_admin
-from firebase_admin import auth as firebase_auth, credentials
 
 # Initialize Firebase Admin (Only once)
 if not firebase_admin._apps:
