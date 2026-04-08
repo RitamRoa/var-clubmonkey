@@ -69,7 +69,7 @@ export default function AuthPage({
 
       // 5. Route Redirection
       if (data.is_admin && loginType === "admin") {
-        router.push("/admin/dashboard");
+        router.push("/main");
       } else if (!data.preferences || data.preferences.length === 0) {
         router.push("/onboarding");
       } else {
