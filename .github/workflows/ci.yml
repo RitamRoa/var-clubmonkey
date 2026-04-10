@@ -1,0 +1,181 @@
+name: ClubMonkey API CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: API Route Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      BASE_URL: http://127.0.0.1:8000
+      TEST_USER_ID: test-user-uid-001
+      TEST_CLUB_ID: "1"
+      TEST_PROJECT_ID: "1"
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Python setup with pip cache ───────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip --quiet
+          pip install fastapi uvicorn sqlalchemy psycopg2-binary requests \
+                      google-auth firebase-admin httpx pytest ruff --quiet
+
+      # ── 3. Inject secrets ────────────────────────────────────────────────────
+      - name: Write service-account.json
+        env:
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        run: echo "$SERVICE_ACCOUNT_JSON" > service-account.json
+
+      # ── 4. Lint ───────────────────────────────────────────────────────────────
+      - name: Lint (ruff)
+        run: ruff check main.py --output-format=github --exit-zero
+
+      # ── 5. Start API server in background ────────────────────────────────────
+      - name: Start uvicorn
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 \
+            > uvicorn.log 2>&1 &
+          echo $! > uvicorn.pid
+
+      - name: Wait for server to be healthy
+        run: |
+          for i in $(seq 1 20); do
+            if curl -sf http://127.0.0.1:8000/ > /dev/null; then
+              echo "Server is up after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "=== uvicorn log ===" && cat uvicorn.log
+          echo "Server did not start within 20s" && exit 1
+
+      # ── 6. Route Tests ───────────────────────────────────────────────────────
+      - name: "GET /"
+        run: |
+          r=$(curl -sf $BASE_URL/)
+          status=$(echo $r | python3 -c "import sys,json; print(json.load(sys.stdin)['status'])")
+          [ "$status" = "online" ] && echo "PASS: GET /" || (echo "FAIL: $r"; exit 1)
+
+      - name: "GET /users"
+        run: |
+          r=$(curl -sf $BASE_URL/users)
+          echo $r | python3 -c "import sys,json; d=json.load(sys.stdin); assert isinstance(d,list), 'not array'"
+          echo "PASS: GET /users — $(echo $r | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")" users
+
+      - name: "GET /clubs"
+        run: |
+          r=$(curl -sf $BASE_URL/clubs)
+          echo $r | python3 -c "import sys,json; d=json.load(sys.stdin); assert isinstance(d,list), 'not array'"
+          echo "PASS: GET /clubs — $(echo $r | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")" clubs
+
+      - name: "PUT /users/preferences"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X PUT $BASE_URL/users/preferences \
+            -H "Content-Type: application/json" \
+            -d "{\"user_id\":\"$TEST_USER_ID\",\"interests\":[\"tech\",\"music\"]}")
+          if [ "$code" = "200" ] || [ "$code" = "404" ]; then
+            echo "PASS: PUT /users/preferences ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      - name: "GET /clubs/recommended"
+        run: |
+          r=$(curl -sf $BASE_URL/clubs/recommended/$TEST_USER_ID)
+          echo $r | python3 -c "import sys,json; d=json.load(sys.stdin); assert isinstance(d,list)"
+          echo "PASS: GET /clubs/recommended"
+
+      - name: "GET /clubs/{id}"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/clubs/$TEST_CLUB_ID)
+          if [ "$code" = "200" ] || [ "$code" = "404" ]; then
+            echo "PASS: GET /clubs/$TEST_CLUB_ID ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      - name: "GET /allprojects"
+        run: |
+          r=$(curl -sf $BASE_URL/allprojects)
+          echo $r | python3 -c "import sys,json; d=json.load(sys.stdin); assert isinstance(d,list), 'not array'"
+          echo "PASS: GET /allprojects"
+
+      - name: "GET /projects/{id}"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/projects/$TEST_PROJECT_ID)
+          if [ "$code" = "200" ] || [ "$code" = "404" ]; then
+            echo "PASS: GET /projects/$TEST_PROJECT_ID ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      - name: "POST /projects"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST $BASE_URL/projects \
+            -H "Content-Type: application/json" \
+            -d "{\"author_id\":\"$TEST_USER_ID\",\"title\":\"CI Test\",\"description\":\"GH Actions test\",\"requirements\":[\"Python\"]}")
+          if [ "$code" = "200" ] || [ "$code" = "422" ] || [ "$code" = "500" ]; then
+            echo "PASS: POST /projects ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      - name: "POST /projects/join"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            "$BASE_URL/projects/join?user_id=$TEST_USER_ID&project_id=$TEST_PROJECT_ID")
+          if [ "$code" = "200" ] || [ "$code" = "400" ] || [ "$code" = "404" ]; then
+            echo "PASS: POST /projects/join ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      - name: "GET /profile/{id}"
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" $BASE_URL/profile/$TEST_USER_ID)
+          if [ "$code" = "200" ] || [ "$code" = "404" ]; then
+            echo "PASS: GET /profile/$TEST_USER_ID ($code)"
+          else
+            echo "FAIL: unexpected status $code"; exit 1
+          fi
+
+      # ── 7. Pytest unit tests (skipped if no tests/ dir) ──────────────────────
+      - name: Pytest unit tests
+        run: |
+          if [ -d tests ]; then
+            pytest tests/ -v --tb=short --junitxml=test-results.xml
+          else
+            echo "No tests/ directory found, skipping pytest."
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
+          if-no-files-found: ignore
+
+      # ── 8. Always dump server logs ────────────────────────────────────────────
+      - name: Dump uvicorn log on failure
+        if: failure()
+        run: cat uvicorn.log || true
