@@ -61,10 +61,10 @@ pipeline {
                 bat '''
                     if not exist .venv (
                         "%PYTHON_EXE%" -m venv .venv
-                        .venv\Scripts\python.exe -m pip install --upgrade pip --quiet
-                        .venv\Scripts\python.exe -m pip install fastapi uvicorn sqlalchemy psycopg2-binary requests google-auth firebase-admin httpx pytest ruff --quiet
+                        .venv\\Scripts\\python.exe -m pip install --upgrade pip --quiet
+                        .venv\\Scripts\\python.exe -m pip install fastapi uvicorn sqlalchemy psycopg2-binary requests google-auth firebase-admin httpx pytest ruff --quiet
                     ) else (
-                        echo .venv already exists — skipping install.
+                        echo .venv already exists - skipping install.
                     )
                 '''
                 bat 'if not exist service-account.json copy "C:\\Users\\Sambhav\\Desktop\\onHold\\var-clubmonkey\\service-account.json" service-account.json'
@@ -217,7 +217,7 @@ pipeline {
             steps {
                 bat '''
                     if exist tests (
-                        .venv\Scripts\pytest.exe tests/ -v --tb=short --junitxml=test-results.xml
+                        .venv\\Scripts\\pytest.exe tests/ -v --tb=short --junitxml=test-results.xml
                     ) else (
                         echo No tests directory found, skipping pytest.
                     )
