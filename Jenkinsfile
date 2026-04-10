@@ -2,16 +2,16 @@ pipeline {
     agent any
 
     environment {
-        BASE_URL        = "http://localhost:8000"
+        BASE_URL        = "http://127.0.0.1:8000"
         TEST_USER_ID    = 'test-user-uid-001'
         TEST_CLUB_ID    = '1'
         TEST_PROJECT_ID = '1'
     }
 
     parameters {
-        string(name: 'BASE_URL',    defaultValue: 'http://localhost:8000', description: 'Target API base URL')
-        string(name: 'BRANCH',      defaultValue: 'main',                  description: 'Git branch to build')
-        booleanParam(name: 'RUN_INTEGRATION_TESTS', defaultValue: true,    description: 'Run live API integration tests')
+        string(name: 'BASE_URL',    defaultValue: 'http://127.0.0.1:8000', description: 'Target API base URL')
+        string(name: 'BRANCH',      defaultValue: 'main',                   description: 'Git branch to build')
+        booleanParam(name: 'RUN_INTEGRATION_TESTS', defaultValue: true,     description: 'Run live API integration tests')
     }
 
     options {
@@ -21,6 +21,13 @@ pipeline {
     }
 
     stages {
+
+        // Kill any uvicorn left over from a previous broken build before we do anything else.
+        stage('Cleanup Stale Processes') {
+            steps {
+                bat 'taskkill /F /IM uvicorn.exe /T >nul 2>&1 || echo No stale uvicorn found'
+            }
+        }
 
         stage('Checkout') {
             steps {
@@ -57,7 +64,7 @@ pipeline {
 
         stage('Setup Python Environment') {
             steps {
-                // Skip full reinstall if .venv already exists — saves ~30s on every re-run.
+                // Skip full reinstall if .venv already exists - saves ~30s on re-runs.
                 bat '''
                     if not exist .venv (
                         "%PYTHON_EXE%" -m venv .venv
@@ -67,7 +74,10 @@ pipeline {
                         echo .venv already exists - skipping install.
                     )
                 '''
-                bat 'if not exist service-account.json copy "C:\\Users\\Sambhav\\Desktop\\onHold\\var-clubmonkey\\service-account.json" service-account.json'
+                // Inject Firebase service-account.json from Jenkins Secret File credential.
+                withCredentials([file(credentialsId: 'clubmonkey-firebase-cred', variable: 'FIREBASE_CRED_FILE')]) {
+                    bat 'copy "%FIREBASE_CRED_FILE%" service-account.json'
+                }
                 echo "Python virtualenv ready"
             }
         }
@@ -82,9 +92,14 @@ pipeline {
         stage('Start API Server') {
             when { expression { params.RUN_INTEGRATION_TESTS == true } }
             steps {
-                // start /B launches uvicorn fully detached — Jenkins has no handle on it,
-                // so this bat step returns immediately instead of blocking the pipeline.
-                bat 'start /B "" ".venv\\Scripts\\uvicorn.exe" main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2> uvicorn_err.log'
+                // Inject DATABASE_URL and GOOGLE_CLIENT_ID from Jenkins credentials,
+                // then launch uvicorn fully detached so this bat step returns immediately.
+                withCredentials([
+                    string(credentialsId: 'database env',              variable: 'DATABASE_URL'),
+                    string(credentialsId: 'clubmonkey-google-test-token', variable: 'GOOGLE_CLIENT_ID')
+                ]) {
+                    bat 'start /B "" ".venv\\Scripts\\uvicorn.exe" main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2> uvicorn_err.log'
+                }
 
                 // Poll every second until healthy (max 20 s), then move on immediately.
                 powershell '''
@@ -101,14 +116,14 @@ pipeline {
                     if (Test-Path "uvicorn.log")     { Write-Host "=== stdout ==="; Get-Content "uvicorn.log" }
                     if (Test-Path "uvicorn_err.log") { Write-Host "=== stderr ==="; Get-Content "uvicorn_err.log" }
                     if (-not $ok) { Write-Error "Server did not become healthy within 20 s"; exit 1 }
-                    Write-Host "Server OK — ready for tests"
+                    Write-Host "Server OK - ready for tests"
                 '''
             }
         }
 
         stage('Route Tests') {
             when { expression { params.RUN_INTEGRATION_TESTS == true } }
-            // All 11 routes fire at the same time — total time = slowest single request.
+            // All 11 routes fire simultaneously - total time = slowest single request.
             parallel {
 
                 stage('[GET] /') {
@@ -119,13 +134,13 @@ pipeline {
 
                 stage('[GET] /users') {
                     steps {
-                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/users" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /users — $($r.Count) users"'
+                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/users" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /users - $($r.Count) users"'
                     }
                 }
 
                 stage('[GET] /clubs') {
                     steps {
-                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/clubs" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /clubs — $($r.Count) clubs"'
+                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/clubs" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /clubs - $($r.Count) clubs"'
                     }
                 }
 
@@ -142,7 +157,7 @@ pipeline {
 
                 stage('[GET] /clubs/recommended') {
                     steps {
-                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/clubs/recommended/$env:TEST_USER_ID" -Method GET -TimeoutSec 15; Write-Host "PASS: GET /clubs/recommended — $($r.Count) clubs"'
+                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/clubs/recommended/$env:TEST_USER_ID" -Method GET -TimeoutSec 15; Write-Host "PASS: GET /clubs/recommended - $($r.Count) clubs"'
                     }
                 }
 
@@ -158,7 +173,7 @@ pipeline {
 
                 stage('[GET] /allprojects') {
                     steps {
-                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/allprojects" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /allprojects — $($r.Count) projects"'
+                        powershell '$ProgressPreference = "SilentlyContinue"; $r = Invoke-RestMethod -Uri "$env:BASE_URL/allprojects" -Method GET -TimeoutSec 15; if ($r -isnot [Array]) { Write-Error "FAIL: not array"; exit 1 }; Write-Host "PASS: GET /allprojects - $($r.Count) projects"'
                     }
                 }
 
@@ -201,7 +216,7 @@ pipeline {
                                 $r = Invoke-RestMethod -Uri "$env:BASE_URL/profile/$env:TEST_USER_ID" -Method GET -TimeoutSec 15
                                 $missing = @("user","clubs","recommended_clubs","posted_projects","collaborating_projects") | Where-Object { -not $r.PSObject.Properties[$_] }
                                 if ($missing) { Write-Error "FAIL: missing $($missing -join ',')"; exit 1 }
-                                Write-Host "PASS: GET /profile — $($r.user.name)"
+                                Write-Host "PASS: GET /profile - $($r.user.name)"
                             } catch {
                                 $c = $_.Exception.Response.StatusCode.value__
                                 if ($c -eq 404) { Write-Host "PASS: 404 not seeded" } else { Write-Error "FAIL: $c"; exit 1 }
@@ -240,7 +255,7 @@ pipeline {
             '''
             cleanWs()
         }
-        success { echo "PIPELINE PASSED — All ClubMonkey routes healthy." }
-        failure { echo "PIPELINE FAILED — Check stage logs above." }
+        success { echo "PIPELINE PASSED - All ClubMonkey routes healthy." }
+        failure { echo "PIPELINE FAILED - Check stage logs above." }
     }
 }
