@@ -25,7 +25,12 @@ pipeline {
         // Kill any uvicorn left over from a previous broken build before we do anything else.
         stage('Cleanup Stale Processes') {
             steps {
-                bat 'taskkill /F /IM uvicorn.exe /T >nul 2>&1 || echo No stale uvicorn found'
+                // Force exit /b 0 — echo is a CMD built-in that does NOT reset ERRORLEVEL,
+                // so taskkill's 128 (process not found) would otherwise propagate and fail the stage.
+                bat '''
+                    taskkill /F /IM uvicorn.exe /T >nul 2>&1
+                    exit /b 0
+                '''
             }
         }
 
@@ -250,8 +255,9 @@ pipeline {
     post {
         always {
             bat '''
-                taskkill /F /IM uvicorn.exe /T >nul 2>&1 || echo uvicorn already stopped
+                taskkill /F /IM uvicorn.exe /T >nul 2>&1
                 if exist uvicorn_err.log type uvicorn_err.log
+                exit /b 0
             '''
             cleanWs()
         }
