@@ -15,7 +15,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 10, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
     }
@@ -57,10 +57,15 @@ pipeline {
 
         stage('Setup Python Environment') {
             steps {
+                // Skip full reinstall if .venv already exists — saves ~30s on every re-run.
                 bat '''
-                    "%PYTHON_EXE%" -m venv .venv
-                    .venv\\Scripts\\python.exe -m pip install --upgrade pip --quiet
-                    .venv\\Scripts\\python.exe -m pip install fastapi uvicorn sqlalchemy psycopg2-binary requests google-auth firebase-admin httpx pytest ruff --quiet
+                    if not exist .venv (
+                        "%PYTHON_EXE%" -m venv .venv
+                        .venv\Scripts\python.exe -m pip install --upgrade pip --quiet
+                        .venv\Scripts\python.exe -m pip install fastapi uvicorn sqlalchemy psycopg2-binary requests google-auth firebase-admin httpx pytest ruff --quiet
+                    ) else (
+                        echo .venv already exists — skipping install.
+                    )
                 '''
                 bat 'if not exist service-account.json copy "C:\\Users\\Sambhav\\Desktop\\onHold\\var-clubmonkey\\service-account.json" service-account.json'
                 echo "Python virtualenv ready"
@@ -77,26 +82,25 @@ pipeline {
         stage('Start API Server') {
             when { expression { params.RUN_INTEGRATION_TESTS == true } }
             steps {
-                // Launch uvicorn fully detached so Jenkins does not hold a process handle.
-                // cmd /c start /B creates a new detached process group on Windows.
-                bat '''
-                    start /B "" ".venv\\Scripts\\uvicorn.exe" main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2> uvicorn_err.log
-                '''
-                // Give the server a few seconds to initialise, then health-check it.
+                // start /B launches uvicorn fully detached — Jenkins has no handle on it,
+                // so this bat step returns immediately instead of blocking the pipeline.
+                bat 'start /B "" ".venv\\Scripts\\uvicorn.exe" main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2> uvicorn_err.log'
+
+                // Poll every second until healthy (max 20 s), then move on immediately.
                 powershell '''
                     $ProgressPreference = "SilentlyContinue"
-                    $deadline = (Get-Date).AddSeconds(30)
+                    $deadline = (Get-Date).AddSeconds(20)
                     $ok = $false
                     while ((Get-Date) -lt $deadline) {
-                        Start-Sleep -Seconds 2
+                        Start-Sleep -Seconds 1
                         try {
-                            $r = Invoke-WebRequest -Uri "http://127.0.0.1:8000/" -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+                            $r = Invoke-WebRequest -Uri "http://127.0.0.1:8000/" -UseBasicParsing -TimeoutSec 3 -ErrorAction Stop
                             if ($r.StatusCode -eq 200) { $ok = $true; break }
                         } catch { <# still starting #> }
                     }
                     if (Test-Path "uvicorn.log")     { Write-Host "=== stdout ==="; Get-Content "uvicorn.log" }
                     if (Test-Path "uvicorn_err.log") { Write-Host "=== stderr ==="; Get-Content "uvicorn_err.log" }
-                    if (-not $ok) { Write-Error "Server did not become healthy within 30 s"; exit 1 }
+                    if (-not $ok) { Write-Error "Server did not become healthy within 20 s"; exit 1 }
                     Write-Host "Server OK — ready for tests"
                 '''
             }
@@ -104,7 +108,8 @@ pipeline {
 
         stage('Route Tests') {
             when { expression { params.RUN_INTEGRATION_TESTS == true } }
-            stages {
+            // All 11 routes fire at the same time — total time = slowest single request.
+            parallel {
 
                 stage('[GET] /') {
                     steps {
@@ -212,7 +217,7 @@ pipeline {
             steps {
                 bat '''
                     if exist tests (
-                        .venv\\Scripts\\pytest.exe tests/ -v --tb=short --junitxml=test-results.xml
+                        .venv\Scripts\pytest.exe tests/ -v --tb=short --junitxml=test-results.xml
                     ) else (
                         echo No tests directory found, skipping pytest.
                     )
@@ -230,7 +235,7 @@ pipeline {
     post {
         always {
             bat '''
-                taskkill /F /IM uvicorn.exe /T > nul 2>&1 || echo uvicorn already stopped
+                taskkill /F /IM uvicorn.exe /T >nul 2>&1 || echo uvicorn already stopped
                 if exist uvicorn_err.log type uvicorn_err.log
             '''
             cleanWs()
