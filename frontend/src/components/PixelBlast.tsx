@@ -1,7 +1,7 @@
 import { Effect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
-import "./PixelBlast.css";
+import styles from "./PixelBlast.module.css";
 
 type PixelBlastVariant = "square" | "circle" | "triangle" | "diamond";
 
@@ -747,7 +747,7 @@ void mainImage(const in vec4 inputColor,const in vec2 uv,out vec4 outputColor){
   return (
     <div
       ref={containerRef}
-      className={`pixel-blast-container ${className ?? ""}`}
+      className={`${styles.container} ${className ?? ""}`}
       style={style}
       aria-label="PixelBlast interactive background"
     />

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Grainient from "./Grainient";
+import ScrollVelocity from "@/components/ScrollVelocity";
 
 type Star = {
   left: number;
@@ -219,56 +220,20 @@ const Page = () => {
         </div>
 
         <div className="absolute inset-0 flex items-center">
-          <div ref={tickerTrackRef} className="flex w-max items-center whitespace-nowrap pl-[12vw]">
-            <span className="ticker-word ticker-main text-[clamp(58px,9vw,150px)] font-light tracking-[0.06em] text-white/95">
-              Club Monkey
-            </span>
-
-            <svg className="ticker-curve mx-12 h-10 w-28 text-blue-300/70" viewBox="0 0 120 30" fill="none" aria-hidden>
-              <path d="M3 16C18 16 20 3 35 3C50 3 52 27 67 27C82 27 84 10 99 10H117" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-
-            <span className="ticker-word mr-20 text-[clamp(46px,7vw,120px)] font-light tracking-[0.05em] text-blue-200/90" style={{ animationDelay: "0.5s" }}>
-              club
-            </span>
-
-            <span className="ticker-accent mr-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-400/40 text-cyan-200/80" style={{ animationDelay: "1.2s" }}>
-              ✦
-            </span>
-
-            <span className="ticker-word mr-28 text-[clamp(46px,7vw,120px)] font-light tracking-[0.05em] text-indigo-100/90" style={{ animationDelay: "1.1s" }}>
-              collab
-            </span>
-
-            <svg className="ticker-curve mx-10 h-8 w-20 text-purple-300/70" viewBox="0 0 80 24" fill="none" aria-hidden style={{ animationDelay: "1.5s" }}>
-              <path d="M3 12H77" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3 6" strokeLinecap="round" />
-            </svg>
-
-            <span className="ticker-word mr-24 text-[clamp(44px,6.5vw,112px)] font-light tracking-[0.05em] text-white/85" style={{ animationDelay: "1.7s" }}>
-              and
-            </span>
-
-            <span className="ticker-accent mr-14 inline-flex h-10 w-10 items-center justify-center text-pink-200/75" style={{ animationDelay: "2s" }}>✺</span>
-
-            <span className="ticker-word mr-24 text-[clamp(52px,7.6vw,128px)] font-light tracking-[0.05em] text-violet-200/90" style={{ animationDelay: "2.3s" }}>
-              monke
-            </span>
-
-            <svg className="ticker-curve mx-12 h-10 w-28 text-cyan-300/70" viewBox="0 0 120 30" fill="none" aria-hidden style={{ animationDelay: "2.8s" }}>
-              <path d="M3 14C20 14 18 5 35 5C52 5 50 25 67 25C84 25 82 8 99 8H117" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-
-            <span className="inline-flex items-center pr-[45vw]">
-              <span className="ticker-accent relative h-[clamp(72px,8.2vw,122px)] w-[clamp(72px,8.2vw,122px)] overflow-hidden rounded-full border border-cyan-300/35 bg-[#050a1a]/80 shadow-[0_0_28px_rgba(96,165,250,0.3)]" style={{ animationDelay: "3.1s" }}>
-                <Image
-                  src="/monkey-logo.jpeg"
-                  alt="Monkey logo"
-                  fill
-                  sizes="(max-width: 768px) 72px, 122px"
-                  className="object-cover"
-                />
-              </span>
-            </span>
+          <div ref={tickerTrackRef} className="w-full px-2 md:px-0">
+            <ScrollVelocity
+              texts={[
+                <span className="ticker-line">Club Monkey ~ club ✦ collab ~ and ✺ monke</span>,
+                <span className="ticker-line ticker-line-secondary">Scroll Down · Club Monkey · Scroll Down · Club Monkey</span>,
+              ]}
+              velocity={88}
+              damping={58}
+              stiffness={360}
+              numCopies={7}
+              className="velocity-copy"
+              parallaxClassName="parallax"
+              scrollerClassName="scroller"
+            />
           </div>
         </div>
       </section>
@@ -434,21 +399,17 @@ const Page = () => {
           will-change: transform, opacity;
         }
 
-        .ticker-word {
-          animation: tickerGlow 6.5s ease-in-out infinite;
+        .ticker-line {
+          font-size: clamp(60px, 9vw, 148px);
+          font-weight: 300;
+          letter-spacing: 0.04em;
+          color: rgba(236, 244, 255, 0.9);
+          text-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
         }
 
-        .ticker-main {
-          animation-duration: 8s;
-        }
-
-        .ticker-accent {
-          animation: tickerFloat 4.8s ease-in-out infinite;
-        }
-
-        .ticker-curve {
-          animation: tickerCurvePulse 7s ease-in-out infinite;
-          transform-origin: center;
+        .ticker-line-secondary {
+          font-size: clamp(54px, 8.2vw, 134px);
+          color: rgba(174, 206, 255, 0.86);
         }
 
         .cosmic-vignette {
@@ -549,40 +510,6 @@ const Page = () => {
           100% {
             opacity: 0;
             transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--angle)) scaleX(0.85);
-          }
-        }
-
-        @keyframes tickerGlow {
-          0%,
-          100% {
-            opacity: 0.82;
-            filter: drop-shadow(0 0 0 rgba(147, 197, 253, 0));
-          }
-          50% {
-            opacity: 1;
-            filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.3));
-          }
-        }
-
-        @keyframes tickerFloat {
-          0%,
-          100% {
-            transform: translateY(0px) scale(1);
-            opacity: 0.75;
-          }
-          50% {
-            transform: translateY(-4px) scale(1.05);
-            opacity: 0.95;
-          }
-        }
-
-        @keyframes tickerCurvePulse {
-          0%,
-          100% {
-            opacity: 0.55;
-          }
-          50% {
-            opacity: 0.9;
           }
         }
 

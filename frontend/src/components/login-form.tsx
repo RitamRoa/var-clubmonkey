@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import Grainient from "@/app/Grainient";
+import PixelBlast from "@/components/PixelBlast";
 import { Button } from "./button";
 import {
   Card,
@@ -148,6 +149,28 @@ export default function AuthPage({
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-[#0f0f1e] to-[#010208]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(30,64,175,0.12)_0%,rgba(30,64,175,0)_40%),radial-gradient(circle_at_80%_15%,rgba(59,130,246,0.08)_0%,rgba(59,130,246,0)_45%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_72%,rgba(167,139,250,0.12)_0%,rgba(167,139,250,0)_38%),radial-gradient(circle_at_24%_78%,rgba(96,165,250,0.09)_0%,rgba(96,165,250,0)_40%)]" />
+
+        <div className="absolute inset-0 opacity-82">
+          <PixelBlast
+            variant="square"
+            pixelSize={4}
+            color="#B19EEF"
+            patternScale={2}
+            patternDensity={1}
+            pixelSizeJitter={0}
+            enableRipples
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.5}
+            liquid={false}
+            liquidStrength={0.12}
+            liquidRadius={1.2}
+            liquidWobbleSpeed={5}
+            speed={0.5}
+            edgeFade={0.25}
+            transparent
+          />
+        </div>
 
         <div className="absolute inset-0 opacity-60 mix-blend-screen">
           <Grainient
