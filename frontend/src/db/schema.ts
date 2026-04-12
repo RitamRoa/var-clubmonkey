@@ -91,12 +91,32 @@ export const projectCollaborators = pgTable(
   }),
 );
 
+// --- 7. Club Followers (New Junction Table) ---
+export const clubFollowers = pgTable(
+  "club_followers",
+  {
+    userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+    clubId: integer("club_id").references(() => clubs.id, {
+      onDelete: "cascade",
+    }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.clubId] }),
+  }),
+);
+
 // --- RELATIONS (Fixed for Typescript) ---
 
 export const usersRelations = relations(users, ({ many }) => ({
   memberships: many(clubMembers),
   ownedProjects: many(projects),
   collaborations: many(projectCollaborators),
+  following: many(clubFollowers),
+}));
+
+export const clubFollowersRelations = relations(clubFollowers, ({ one }) => ({
+  user: one(users, { fields: [clubFollowers.userId], references: [users.id] }),
+  club: one(clubs, { fields: [clubFollowers.clubId], references: [clubs.id] }),
 }));
 
 export const clubsRelations = relations(clubs, ({ many }) => ({

@@ -53,6 +53,7 @@ const Page = () => {
   const router = useRouter();
   const [shootingStar, setShootingStar] = useState<ShootingStar | null>(null);
   const [isNavigatingToAuth, setIsNavigatingToAuth] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const tickerSectionRef = useRef<HTMLElement | null>(null);
   const tickerTrackRef = useRef<HTMLDivElement | null>(null);
 
@@ -69,7 +70,7 @@ const Page = () => {
   };
 
   const stars = useMemo<Star[]>(() => {
-    return Array.from({ length: 350 }, (_, i) => {
+    return Array.from({ length: 120 }, (_, i) => {
       const base = i + 1;
       return {
         left: pseudoRandom(base * 1.37) * 100,
@@ -84,7 +85,7 @@ const Page = () => {
   }, []);
 
   const particles = useMemo<Particle[]>(() => {
-    return Array.from({ length: 40 }, (_, i) => ({
+    return Array.from({ length: 20 }, (_, i) => ({
       id: i,
       left: pseudoRandom((i + 1) * 8.11) * 100,
       top: pseudoRandom((i + 1) * 9.07) * 100,
@@ -96,6 +97,7 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
     let timeoutId: number;
 
     const spawnShootingStar = () => {
@@ -190,33 +192,6 @@ const Page = () => {
 
       <section ref={tickerSectionRef} className="relative h-screen w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#020410] via-[#010208] to-[#020410]" />
-        <div className="absolute inset-0 opacity-55 mix-blend-screen">
-          <Grainient
-            className="h-full w-full"
-            color1="#050b1d"
-            color2="#0c1f4e"
-            color3="#220f4a"
-            timeSpeed={0.16}
-            colorBalance={0}
-            warpStrength={0.33}
-            warpFrequency={7.2}
-            warpSpeed={2.4}
-            warpAmplitude={34}
-            blendAngle={0}
-            blendSoftness={0.16}
-            rotationAmount={370}
-            noiseScale={1.6}
-            grainAmount={0.03}
-            grainScale={2}
-            grainAnimated={false}
-            contrast={1.5}
-            gamma={0.9}
-            saturation={0.85}
-            centerX={0}
-            centerY={0}
-            zoom={0.96}
-          />
-        </div>
 
         <div className="absolute inset-0 flex items-center">
           <div ref={tickerTrackRef} className="flex w-max items-center whitespace-nowrap pl-[12vw]">
@@ -275,17 +250,17 @@ const Page = () => {
 
       <section className="relative min-h-screen w-full overflow-hidden bg-[#010208]">
         {/* Nebula Background Layers */}
-        <div className="absolute bottom-[-10%] left-[-10%] h-[50%] w-[60%] rounded-full bg-blue-900/25 pointer-events-none z-0 nebula-glow" />
-        <div className="absolute bottom-[-5%] right-[-5%] h-[40%] w-[50%] rounded-full bg-indigo-900/20 pointer-events-none z-0 nebula-glow" />
-        <div className="absolute bottom-[-20%] left-[20%] h-[60%] w-[70%] rounded-full bg-blue-600/15 pointer-events-none z-0 nebula-glow-deep" />
-        <div className="absolute top-[-15%] right-[10%] h-[45%] w-[40%] rounded-full bg-purple-900/15 pointer-events-none z-0 nebula-glow" />
+        <div className="absolute bottom-[-10%] left-[-10%] h-[50%] w-[60%] pointer-events-none z-0 bg-[radial-gradient(circle_at_center,rgba(30,58,138,0.35)_0%,transparent_60%)] mix-blend-screen" />
+        <div className="absolute bottom-[-5%] right-[-5%] h-[40%] w-[50%] pointer-events-none z-0 bg-[radial-gradient(circle_at_center,rgba(49,46,129,0.25)_0%,transparent_60%)] mix-blend-screen" />
+        <div className="absolute bottom-[-20%] left-[20%] h-[60%] w-[70%] pointer-events-none z-0 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.2)_0%,transparent_60%)] mix-blend-screen" />
+        <div className="absolute top-[-15%] right-[10%] h-[45%] w-[40%] pointer-events-none z-0 bg-[radial-gradient(circle_at_center,rgba(88,28,135,0.2)_0%,transparent_60%)] mix-blend-screen" />
 
         {/* Starfield Background */}
         <div className="pointer-events-none absolute inset-0 z-[1]">
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-[#0f0f1e] to-[#010208]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(30,64,175,0.12)_0%,rgba(30,64,175,0)_40%),radial-gradient(circle_at_80%_15%,rgba(59,130,246,0.08)_0%,rgba(59,130,246,0)_45%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_72%,rgba(167,139,250,0.12)_0%,rgba(167,139,250,0)_38%),radial-gradient(circle_at_24%_78%,rgba(96,165,250,0.09)_0%,rgba(96,165,250,0)_40%),radial-gradient(circle_at_74%_44%,rgba(244,114,182,0.08)_0%,rgba(244,114,182,0)_36%)]" />
-          <div className="absolute inset-0 opacity-72 mix-blend-screen">
+          <div className="absolute inset-0 opacity-85 mix-blend-screen">
             <Grainient
               className="h-full w-full"
               color1="#060a1a"
@@ -313,60 +288,64 @@ const Page = () => {
             />
           </div>
           <div className="absolute inset-0 cosmic-vignette" />
+          
+          {mounted && (
+            <>
+              {stars.map((star, index) => (
+                <span
+                  key={index}
+                  className="star-twinkle absolute rounded-full"
+                  style={{
+                    left: `${star.left}%`,
+                    top: `${star.top}%`,
+                    width: `${star.size}px`,
+                    height: `${star.size}px`,
+                    opacity: star.opacity,
+                    ["--star-opacity" as string]: star.opacity,
+                    animationDelay: `${star.delay}s`,
+                    animationDuration: `${star.duration}s`,
+                    backgroundColor: star.color,
+                    boxShadow: `0 0 ${8 + star.size}px ${star.color}80`,
+                  }}
+                />
+              ))}
 
-          {stars.map((star, index) => (
-            <span
-              key={index}
-              className="star-twinkle absolute rounded-full"
-              style={{
-                left: `${star.left}%`,
-                top: `${star.top}%`,
-                width: `${star.size}px`,
-                height: `${star.size}px`,
-                opacity: star.opacity,
-                ["--star-opacity" as string]: star.opacity,
-                animationDelay: `${star.delay}s`,
-                animationDuration: `${star.duration}s`,
-                backgroundColor: star.color,
-                boxShadow: `0 0 ${8 + star.size}px ${star.color}80`,
-              }}
-            />
-          ))}
+              {particles.map((particle) => (
+                <span
+                  key={particle.id}
+                  className="floating-particle absolute rounded-full"
+                  style={{
+                    left: `${particle.left}%`,
+                    top: `${particle.top}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    opacity: particle.opacity,
+                    animationDuration: `${particle.duration}s`,
+                    animationDelay: `${particle.delay}s`,
+                    backgroundColor: "#60a5fa",
+                    boxShadow: "0 0 6px rgba(96, 165, 250, 0.4)",
+                  }}
+                />
+              ))}
 
-          {particles.map((particle) => (
-            <span
-              key={particle.id}
-              className="floating-particle absolute rounded-full"
-              style={{
-                left: `${particle.left}%`,
-                top: `${particle.top}%`,
-                width: `${particle.size}px`,
-                height: `${particle.size}px`,
-                opacity: particle.opacity,
-                animationDuration: `${particle.duration}s`,
-                animationDelay: `${particle.delay}s`,
-                backgroundColor: "#60a5fa",
-                boxShadow: "0 0 6px rgba(96, 165, 250, 0.4)",
-              }}
-            />
-          ))}
-
-          {shootingStar && (
-            <span
-              key={shootingStar.id}
-              className="shooting-star absolute"
-              style={{
-                left: `${shootingStar.left}%`,
-                top: `${shootingStar.top}%`,
-                width: `${shootingStar.length}px`,
-                animationDuration: `${shootingStar.duration}s`,
-                ["--dx" as string]: `${shootingStar.dx}px`,
-                ["--dy" as string]: `${shootingStar.dy}px`,
-                ["--brightness" as string]: shootingStar.brightness,
-                ["--angle" as string]: `${shootingStar.angle}deg`,
-                ["--meteor-rgb" as string]: shootingStar.tint,
-              }}
-            />
+              {shootingStar && (
+                <span
+                  key={shootingStar.id}
+                  className="shooting-star absolute"
+                  style={{
+                    left: `${shootingStar.left}%`,
+                    top: `${shootingStar.top}%`,
+                    width: `${shootingStar.length}px`,
+                    animationDuration: `${shootingStar.duration}s`,
+                    ["--dx" as string]: `${shootingStar.dx}px`,
+                    ["--dy" as string]: `${shootingStar.dy}px`,
+                    ["--brightness" as string]: shootingStar.brightness,
+                    ["--angle" as string]: `${shootingStar.angle}deg`,
+                    ["--meteor-rgb" as string]: shootingStar.tint,
+                  }}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -407,191 +386,6 @@ const Page = () => {
           />
         </div>
       </section>
-
-      <style jsx global>{`
-        .star-twinkle {
-          animation-name: twinkle;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          box-shadow: 0 0 6px rgba(196, 225, 255, 0.32);
-        }
-
-        .floating-particle {
-          animation-name: drift;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-
-        .shooting-star {
-          height: 1.6px;
-          border-radius: 999px;
-          transform-origin: left center;
-          background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(var(--meteor-rgb), calc(0.2 * var(--brightness))) 35%, rgba(248, 252, 255, calc(0.9 * var(--brightness))) 100%);
-          filter: drop-shadow(0 0 4px rgba(var(--meteor-rgb), calc(0.65 * var(--brightness)))) drop-shadow(0 0 14px rgba(198, 228, 255, calc(0.3 * var(--brightness))));
-          animation-name: shoot;
-          animation-timing-function: cubic-bezier(0.22, 0.58, 0.2, 1);
-          animation-fill-mode: forwards;
-          will-change: transform, opacity;
-        }
-
-        .ticker-word {
-          animation: tickerGlow 6.5s ease-in-out infinite;
-        }
-
-        .ticker-main {
-          animation-duration: 8s;
-        }
-
-        .ticker-accent {
-          animation: tickerFloat 4.8s ease-in-out infinite;
-        }
-
-        .ticker-curve {
-          animation: tickerCurvePulse 7s ease-in-out infinite;
-          transform-origin: center;
-        }
-
-        .cosmic-vignette {
-          background: radial-gradient(circle at center, rgba(1, 2, 8, 0) 38%, rgba(1, 2, 8, 0.3) 80%, rgba(1, 2, 8, 0.58) 100%);
-        }
-
-        .shooting-star::after {
-          content: "";
-          position: absolute;
-          top: 50%;
-          right: -1px;
-          width: 4px;
-          height: 4px;
-          border-radius: 999px;
-          transform: translate(45%, -50%);
-          background: rgba(252, 253, 255, calc(0.95 * var(--brightness)));
-          box-shadow: 0 0 16px rgba(var(--meteor-rgb), calc(0.8 * var(--brightness)));
-        }
-
-        .shooting-star::before {
-          content: "";
-          position: absolute;
-          inset: -1px 0 -1px 12%;
-          border-radius: 999px;
-          background: linear-gradient(90deg, rgba(var(--meteor-rgb), 0), rgba(var(--meteor-rgb), calc(0.24 * var(--brightness))) 45%, rgba(255, 255, 255, calc(0.5 * var(--brightness))) 100%);
-          filter: blur(1.5px);
-        }
-
-        .nebula-glow {
-          filter: blur(80px);
-          mix-blend-mode: screen;
-          opacity: 0.4;
-        }
-
-        .nebula-glow-deep {
-          filter: blur(120px);
-          mix-blend-mode: screen;
-          opacity: 0.25;
-        }
-
-        @keyframes twinkle {
-          0%, 100% {
-            opacity: calc(var(--star-opacity) * 0.45);
-            transform: scale(0.95);
-          }
-          35% {
-            opacity: calc(var(--star-opacity) * 0.72);
-            transform: scale(1.02);
-          }
-          50% {
-            opacity: var(--star-opacity);
-            transform: scale(1.15);
-          }
-          72% {
-            opacity: calc(var(--star-opacity) * 0.62);
-            transform: scale(0.98);
-          }
-        }
-
-        @keyframes drift {
-          0% {
-            transform: translate(0, 0) rotate(0deg);
-            opacity: 0;
-          }
-          10% {
-            opacity: var(--opacity);
-          }
-          90% {
-            opacity: var(--opacity);
-          }
-          100% {
-            transform: translate(100px, 150px) rotate(360deg);
-            opacity: 0;
-          }
-        }
-
-        @keyframes shoot {
-          0% {
-            opacity: 0;
-            transform: translate3d(0, 0, 0) rotate(var(--angle)) scaleX(0.65);
-          }
-          10% {
-            opacity: calc(0.62 * var(--brightness));
-            transform: translate3d(calc(0.08 * var(--dx)), calc(0.08 * var(--dy)), 0) rotate(var(--angle)) scaleX(0.9);
-          }
-          32% {
-            opacity: var(--brightness);
-            transform: translate3d(calc(0.34 * var(--dx)), calc(0.34 * var(--dy)), 0) rotate(var(--angle)) scaleX(1.04);
-          }
-          68% {
-            opacity: var(--brightness);
-            transform: translate3d(calc(0.72 * var(--dx)), calc(0.72 * var(--dy)), 0) rotate(var(--angle)) scaleX(1.01);
-          }
-          88% {
-            opacity: calc(0.5 * var(--brightness));
-            transform: translate3d(calc(0.9 * var(--dx)), calc(0.9 * var(--dy)), 0) rotate(var(--angle)) scaleX(0.96);
-          }
-          100% {
-            opacity: 0;
-            transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--angle)) scaleX(0.85);
-          }
-        }
-
-        @keyframes tickerGlow {
-          0%,
-          100% {
-            opacity: 0.82;
-            filter: drop-shadow(0 0 0 rgba(147, 197, 253, 0));
-          }
-          50% {
-            opacity: 1;
-            filter: drop-shadow(0 0 10px rgba(147, 197, 253, 0.3));
-          }
-        }
-
-        @keyframes tickerFloat {
-          0%,
-          100% {
-            transform: translateY(0px) scale(1);
-            opacity: 0.75;
-          }
-          50% {
-            transform: translateY(-4px) scale(1.05);
-            opacity: 0.95;
-          }
-        }
-
-        @keyframes tickerCurvePulse {
-          0%,
-          100% {
-            opacity: 0.55;
-          }
-          50% {
-            opacity: 0.9;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .shooting-star {
-            height: 1.5px;
-          }
-        }
-      `}</style>
     </div>
   );
 };

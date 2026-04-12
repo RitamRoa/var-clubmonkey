@@ -35,7 +35,10 @@ interface JoinedClub {
   tags: string[];
 }
 
-function normalizeHexColor(value: string | undefined, fallback: string): string {
+function normalizeHexColor(
+  value: string | undefined,
+  fallback: string,
+): string {
   if (!value) return fallback;
   const cleaned = value.trim();
   if (/^#[0-9a-fA-F]{6}$/.test(cleaned)) return cleaned;
@@ -78,6 +81,9 @@ export default function ClubProfile() {
   const [upvotes, setUpvotes] = useState<Record<string, number>>({});
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastTone, setToastTone] = useState<"info" | "success">("info");
+  const [followerCount, setFollowerCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [hoveringFollow, setHoveringFollow] = useState(false);
 
   useEffect(() => {
     const rawSession = localStorage.getItem("user");
@@ -87,15 +93,27 @@ export default function ClubProfile() {
 
     setCurrentUserId(userSession.id);
 
-    const joinedRaw = localStorage.getItem(`clubmonkey:joinedClubs:${userSession.id}`);
+    const joinedRaw = localStorage.getItem(
+      `clubmonkey:joinedClubs:${userSession.id}`,
+    );
     if (joinedRaw) {
       const joinedList = JSON.parse(joinedRaw) as Array<{ id: number }>;
       setIsJoined(joinedList.some((clubItem) => clubItem.id === Number(id)));
     }
 
-    const upvoteRaw = localStorage.getItem(`clubmonkey:postUpvotes:${userSession.id}`);
+    const upvoteRaw = localStorage.getItem(
+      `clubmonkey:postUpvotes:${userSession.id}`,
+    );
     if (upvoteRaw) {
       setUpvotes(JSON.parse(upvoteRaw));
+    }
+
+    const followsRaw = localStorage.getItem(
+      `clubmonkey:follows:${userSession.id}`,
+    );
+    if (followsRaw) {
+      const followsList = JSON.parse(followsRaw) as number[];
+      setIsFollowing(followsList.includes(Number(id)));
     }
   }, [id]);
 
@@ -111,6 +129,7 @@ export default function ClubProfile() {
         const res = await fetch(`http://127.0.0.1:8000/clubs/${id}`);
         const result = await res.json();
         setData(result);
+        setFollowerCount(result.follower_count || 0);
       } catch (error) {
         console.error("Error fetching club details:", error);
       } finally {
@@ -119,6 +138,30 @@ export default function ClubProfile() {
     };
     fetchClubData();
   }, [id]);
+
+  const handleFollowToggle = async () => {
+    if (!currentUserId) return;
+
+    const res = await fetch(`http://127.0.0.1:8000/clubs/follow`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: currentUserId, club_id: Number(id) }),
+    });
+
+    const result = await res.json();
+    setIsFollowing(result.following);
+    setFollowerCount((prev) => (result.following ? prev + 1 : prev - 1));
+    setToastMessage(result.following ? "Following!" : "Unfollowed");
+
+    const followsRaw = localStorage.getItem(`clubmonkey:follows:${currentUserId}`);
+    let followsList = followsRaw ? (JSON.parse(followsRaw) as number[]) : [];
+    if (result.following) {
+      if (!followsList.includes(Number(id))) followsList.push(Number(id));
+    } else {
+      followsList = followsList.filter((fid) => fid !== Number(id));
+    }
+    localStorage.setItem(`clubmonkey:follows:${currentUserId}`, JSON.stringify(followsList));
+  };
 
   if (loading)
     return (
@@ -155,7 +198,9 @@ export default function ClubProfile() {
   const handleJoinToggle = () => {
     if (!currentUserId) return;
 
-    const joinedRaw = localStorage.getItem(`clubmonkey:joinedClubs:${currentUserId}`);
+    const joinedRaw = localStorage.getItem(
+      `clubmonkey:joinedClubs:${currentUserId}`,
+    );
     const joinedList = joinedRaw ? (JSON.parse(joinedRaw) as JoinedClub[]) : [];
 
     let next: JoinedClub[];
@@ -174,7 +219,10 @@ export default function ClubProfile() {
       ];
     }
 
-    localStorage.setItem(`clubmonkey:joinedClubs:${currentUserId}`, JSON.stringify(next));
+    localStorage.setItem(
+      `clubmonkey:joinedClubs:${currentUserId}`,
+      JSON.stringify(next),
+    );
     setToastTone(isJoined ? "info" : "success");
     setToastMessage(isJoined ? `Left r/${club.name}` : `Joined r/${club.name}`);
     setIsJoined(!isJoined);
@@ -187,7 +235,10 @@ export default function ClubProfile() {
     setUpvotes((prev) => {
       const wasUpvoted = Boolean(prev[key]);
       const next = { ...prev, [key]: wasUpvoted ? 0 : 1 };
-      localStorage.setItem(`clubmonkey:postUpvotes:${currentUserId}`, JSON.stringify(next));
+      localStorage.setItem(
+        `clubmonkey:postUpvotes:${currentUserId}`,
+        JSON.stringify(next),
+      );
       setToastTone(wasUpvoted ? "info" : "success");
       setToastMessage(wasUpvoted ? "Upvote removed" : "Post upvoted");
       return next;
@@ -195,7 +246,10 @@ export default function ClubProfile() {
   };
 
   return (
-    <main style={pageStyle} className="relative text-[#D7DADC] min-h-screen overflow-hidden">
+    <main
+      style={pageStyle}
+      className="relative text-[#D7DADC] min-h-screen overflow-hidden"
+    >
       <div
         className="relative z-20 h-48 w-full"
         style={{ backgroundColor: club.accent_color, opacity: 0.86 }}
@@ -305,7 +359,23 @@ export default function ClubProfile() {
                   </span>
                 ))}
               </div>
-
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-zinc-400">
+                  {followerCount} Followers
+                </p>
+                <button
+                  onMouseEnter={() => setHoveringFollow(true)}
+                  onMouseLeave={() => setHoveringFollow(false)}
+                  onClick={handleFollowToggle}
+                  className={`border rounded-full px-4 py-1 text-xs transition-colors ${
+                    isFollowing
+                      ? "border-zinc-700 bg-zinc-800 text-zinc-400 hover:border-red-900/50 hover:bg-red-900/20 hover:text-red-400"
+                      : "border-white/20 hover:bg-white/10 text-white cursor-pointer"
+                  }`}
+                >
+                  {isFollowing ? (hoveringFollow ? "Unfollow" : "Following") : "Follow"}
+                </button>
+              </div>
               <button
                 className={`w-full py-2 rounded-full font-bold transition-transform hover:scale-105 ${
                   isJoined ? "text-zinc-100 bg-zinc-700" : "text-black"
