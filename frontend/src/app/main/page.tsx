@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Aurora from "@/components/Aurora";
 import Carousel, { type CarouselItem } from "@/components/Carousel";
+import TinyToast from "@/components/TinyToast";
 import { FiAperture, FiHeart, FiPlusSquare, FiSmile, FiUsers } from "react-icons/fi";
 
 interface Club {
@@ -114,6 +115,9 @@ export default function Dashboard() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [followedUserIds, setFollowedUserIds] = useState<string[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastTone, setToastTone] = useState<"info" | "success">("info");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [carouselWidth, setCarouselWidth] = useState(320);
   const [loading, setLoading] = useState(true);
@@ -189,6 +193,10 @@ export default function Dashboard() {
       return;
     }
     setCurrentUserId(userSession.id);
+    const savedFollowState = localStorage.getItem(`clubmonkey:follows:${userSession.id}`);
+    if (savedFollowState) {
+      setFollowedUserIds(JSON.parse(savedFollowState));
+    }
 
     const onboardingSeen =
       localStorage.getItem(`clubmonkey:onboardingSeen:${userSession.id}`) === "true";
@@ -262,11 +270,35 @@ export default function Dashboard() {
     }
   }, [activeSuggestionIndex, searchSuggestions.length]);
 
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = window.setTimeout(() => setToastMessage(null), 1800);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
+
   const closeOnboarding = () => {
     if (currentUserId) {
       localStorage.setItem(`clubmonkey:onboardingSeen:${currentUserId}`, "true");
     }
     setShowOnboarding(false);
+  };
+
+  const handleFollowToggle = (userId: string, userName: string) => {
+    setFollowedUserIds((prev) => {
+      const wasFollowing = prev.includes(userId);
+      const next = prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId];
+
+      if (currentUserId) {
+        localStorage.setItem(`clubmonkey:follows:${currentUserId}`, JSON.stringify(next));
+      }
+
+      setToastTone(wasFollowing ? "info" : "success");
+      setToastMessage(wasFollowing ? `Unfollowed u/${userName}` : `Following u/${userName}`);
+
+      return next;
+    });
   };
 
   if (loading)
@@ -555,8 +587,15 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
-                <button className="ml-2 whitespace-nowrap rounded bg-white/10 px-2 py-1 text-[10px] font-bold text-zinc-100 transition-colors hover:bg-white/16">
-                  Follow
+                <button
+                  onClick={() => handleFollowToggle(user.id, user.name)}
+                  className={`ml-2 whitespace-nowrap rounded px-2 py-1 text-[10px] font-bold transition-colors ${
+                    followedUserIds.includes(user.id)
+                      ? "bg-[#2a3b58] text-zinc-100 hover:bg-[#33486d]"
+                      : "bg-white/10 text-zinc-100 hover:bg-white/16"
+                  }`}
+                >
+                  {followedUserIds.includes(user.id) ? "Following" : "Follow"}
                 </button>
               </div>
             ))}
@@ -674,6 +713,8 @@ export default function Dashboard() {
           }
         }
       `}</style>
+
+      <TinyToast message={toastMessage} tone={toastTone} />
     </div>
   );
 }
