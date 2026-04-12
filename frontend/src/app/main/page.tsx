@@ -281,13 +281,13 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-zinc-200">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(255,255,255,0.08),transparent_40%),radial-gradient(circle_at_90%_12%,rgba(255,255,255,0.05),transparent_36%),linear-gradient(180deg,#020202_0%,#0a0a0a_100%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-65 mix-blend-screen aurora-layer">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_10%,rgba(48,86,178,0.2),transparent_42%),radial-gradient(circle_at_90%_12%,rgba(86,64,146,0.14),transparent_38%),linear-gradient(180deg,#020207_0%,#070910_100%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-72 mix-blend-screen aurora-layer">
         <Aurora
-          colorStops={["#1a2340", "#05070f", "#0e1630"]}
-          blend={0.44}
-          amplitude={0.98}
-          speed={0.72}
+          colorStops={["#23386a", "#080b1c", "#21143a"]}
+          blend={0.52}
+          amplitude={1.02}
+          speed={0.7}
         />
       </div>
 
@@ -665,11 +665,11 @@ export default function Dashboard() {
         @keyframes auroraBreath {
           0%,
           100% {
-            opacity: 0.54;
+            opacity: 0.62;
             transform: scale(1);
           }
           50% {
-            opacity: 0.72;
+            opacity: 0.8;
             transform: scale(1.02);
           }
         }

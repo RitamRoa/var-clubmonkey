@@ -95,15 +95,15 @@
 
 .carousel-item-title {
   margin-bottom: 6px;
-  font-weight: 700;
-  font-size: 36px;
-  line-height: 1;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.25;
   color: #fff;
 }
 
 .carousel-item-description {
-  font-size: 32px;
-  line-height: 1.12;
+  font-size: 14px;
+  line-height: 1.45;
   color: rgba(255, 255, 255, 0.92);
 }
 
@@ -139,10 +139,10 @@
 
 @media (max-width: 640px) {
   .carousel-item-title {
-    font-size: 28px;
+    font-size: 17px;
   }
 
   .carousel-item-description {
-    font-size: 24px;
+    font-size: 13px;
   }
 }
