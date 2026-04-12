@@ -34,6 +34,8 @@ interface ProfileData {
   recommended_clubs: Club[];
   posted_projects: Project[];
   collaborating_projects: Project[];
+  following_count?: number;
+  following_names?: string[];
 }
 
 const AVAILABLE_INTERESTS = [
@@ -142,7 +144,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { user, clubs, recommended_clubs, posted_projects, collaborating_projects } = profile;
+  const { user, clubs, recommended_clubs, posted_projects, collaborating_projects, following_names } = profile;
 
   const mergedClubs = [
     ...clubs,
@@ -290,7 +292,7 @@ export default function ProfilePage() {
           </div>
           <div className="bg-[#1A1A1B] border border-[#343536] rounded-lg p-4">
             <p className="text-[10px] uppercase tracking-wider text-zinc-500">Following</p>
-            <p className="mt-1 text-2xl font-bold text-white">{followingCount}</p>
+            <p className="mt-1 text-2xl font-bold text-white">{profile.following_count ?? followingCount}</p>
           </div>
         </section>
 
@@ -369,6 +371,37 @@ export default function ProfilePage() {
                 ) : (
                   <div className="p-8 text-center">
                     <p className="text-xs text-zinc-600 italic">No memberships found</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className="bg-[#1A1A1B] border border-[#343536] rounded-xl overflow-hidden shadow-lg shadow-black/20">
+              <div className="p-4 border-b border-[#343536] bg-[#272729] flex justify-between items-center">
+                <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-300">Following</h2>
+                {(!following_names || following_names.length === 0) && (
+                  <span className="text-[10px] bg-zinc-800 text-zinc-500 border border-zinc-700 px-2 py-1 rounded uppercase font-bold">
+                    None yet
+                  </span>
+                )}
+              </div>
+              <div className="divide-y divide-[#343536]">
+                {following_names && following_names.length > 0 ? (
+                  following_names.map((name, idx) => (
+                    <div
+                      key={idx}
+                      className="group flex flex-col p-4 hover:bg-[#272729] transition-all cursor-default"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-white transition-colors">
+                          r/{name}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-6 text-center">
+                    <p className="text-xs text-zinc-600">You are not following any clubs.</p>
                   </div>
                 )}
               </div>

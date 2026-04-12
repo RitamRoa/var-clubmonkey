@@ -45,6 +45,11 @@ class Club(Base):
     tags = Column(JSON, server_default='[]')
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+class ClubFollower(Base):
+    __tablename__ = "club_followers"
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    club_id = Column(Integer, ForeignKey("clubs.id", ondelete="CASCADE"), primary_key=True)
+
 class ClubMember(Base):
     __tablename__ = "club_members"
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
@@ -255,12 +260,36 @@ def get_club_details(club_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Club not found")
     
      
+    # Count followers
+    follower_count = db.query(ClubFollower).filter(ClubFollower.club_id == club_id).count()
     club_posts = db.query(Post).filter(Post.club_id == club_id).order_by(Post.created_at.desc()).all()
     
     return {
         "club": club,
-        "posts": club_posts
+        "posts": club_posts,
+        "follower_count": follower_count
     }
+
+class FollowRequest(BaseModel):
+    user_id: str
+    club_id: int
+
+@app.post("/clubs/follow")
+def follow_club(data: FollowRequest, db: Session = Depends(get_db)):
+    existing = db.query(ClubFollower).filter(
+        ClubFollower.user_id == data.user_id, 
+        ClubFollower.club_id == data.club_id
+    ).first()
+
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return {"message": "Unfollowed", "following": False}
+    
+    new_follow = ClubFollower(user_id=data.user_id, club_id=data.club_id)
+    db.add(new_follow)
+    db.commit()
+    return {"message": "Followed", "following": True}
 
 class ProjectCreate(BaseModel):
     author_id: str
@@ -368,6 +397,8 @@ class ProfileResponse(BaseModel):
     recommended_clubs: List[ClubSchema]
     posted_projects: List[ProjectSchema]
     collaborating_projects: List[ProjectSchema]
+    following_count: int
+    following_names: List[str]
 
     class Config:
         from_attributes = True
@@ -405,12 +436,16 @@ def get_user_profile(user_id: str, db: Session = Depends(get_db)):
         if user_prefs.intersection(club_tags):
             recommended.append(club)
 
-     
+    followed_clubs = db.query(Club.name).join(ClubFollower).filter(ClubFollower.user_id == user_id).all()
+    following_list = [f[0] for f in followed_clubs]
+
     return {
         "user": user,
         "clubs": my_clubs,
         "recommended_clubs": recommended,
         "posted_projects": my_projects,
-        "collaborating_projects": collab_projects
+        "collaborating_projects": collab_projects,
+        "following_count": len(following_list),
+        "following_names": following_list
     }
     
