@@ -75,10 +75,10 @@ const Page = () => {
       return {
         left: pseudoRandom(base * 1.37) * 100,
         top: pseudoRandom(base * 2.11) * 100,
-        size: 0.4 + pseudoRandom(base * 3.07) * 2.8,
-        opacity: 0.2 + pseudoRandom(base * 4.21) * 0.8,
+        size: 0.6 + pseudoRandom(base * 3.07) * 2.2, // Increased size range
+        opacity: 0.3 + pseudoRandom(base * 4.21) * 0.6, // Higher base opacity for visibility
         delay: pseudoRandom(base * 5.29) * 10,
-        duration: 3 + pseudoRandom(base * 6.13) * 6,
+        duration: 4 + pseudoRandom(base * 6.13) * 6,
         color: STAR_COLORS[Math.floor(pseudoRandom(base * 7.41) * STAR_COLORS.length)],
       };
     });
@@ -137,16 +137,8 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    if (!shootingStar) return;
-
-    const timeoutId = window.setTimeout(() => {
-      setShootingStar((current) => (current?.id === shootingStar.id ? null : current));
-    }, shootingStar.duration * 1000 + 250);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [shootingStar]);
+    return () => {};
+  }, []);
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -164,11 +156,12 @@ const Page = () => {
         {
           x: () => -getDistance(),
           ease: "none",
+          force3D: true, // Force GPU acceleration for the track
           scrollTrigger: {
             trigger: section,
             start: "top top",
             end: () => `+=${getDistance() + window.innerHeight * 0.75}`,
-            scrub: 1,
+            scrub: 0.5, // Reduced from 1 to 0.5 for more responsive feel
             pin: true,
             invalidateOnRefresh: true,
             anticipatePin: 1,
@@ -193,17 +186,38 @@ const Page = () => {
       <section ref={tickerSectionRef} className="relative h-screen w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#020410] via-[#010208] to-[#020410]" />
 
-        <div className="absolute inset-0 flex items-center">
-          <div ref={tickerTrackRef} className="flex w-max items-center whitespace-nowrap pl-[12vw]">
-            <span className="ticker-word ticker-main text-[clamp(58px,9vw,150px)] font-light tracking-[0.06em] text-white/95">
+        {/* Starfield Background Layer (only stars, no gradients/shaders) */}
+        <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden">
+          {stars.map((star, index) => (
+            <span
+              key={index}
+              className="star-twinkle absolute rounded-full"
+              style={{
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                opacity: star.opacity,
+                ["--star-opacity" as string]: star.opacity,
+                animationDelay: `${star.delay}s`,
+                animationDuration: `${star.duration}s`,
+                backgroundColor: star.color,
+                // Removed complex box-shadow for performance
+              }}
+            />
+          ))}
+        </div>
+        
+        <div className="absolute inset-0 flex items-center z-[10]">
+          <div ref={tickerTrackRef} className="flex w-max items-center whitespace-nowrap pl-[12vw]" style={{ willChange: "transform" }}>
+            <span className="ticker-word ticker-main text-[clamp(58px,9vw,150px)] font-light tracking-[0.06em] text-white">
               Club Monkey
             </span>
 
-            <svg className="ticker-curve mx-12 h-10 w-28 text-blue-300/70" viewBox="0 0 120 30" fill="none" aria-hidden>
-              <path d="M3 16C18 16 20 3 35 3C50 3 52 27 67 27C82 27 84 10 99 10H117" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            {/* Replaced complex SVG with simple text/character to reduce path calculation */}
+            <span className="mx-12 text-blue-300/40 text-[50px]">~</span>
 
-            <span className="ticker-word mr-20 text-[clamp(46px,7vw,120px)] font-light tracking-[0.05em] text-blue-200/90" style={{ animationDelay: "0.5s" }}>
+            <span className="ticker-word mr-20 text-[clamp(46px,7vw,120px)] font-light tracking-[0.05em] text-blue-200/90">
               club
             </span>
 
@@ -223,22 +237,21 @@ const Page = () => {
               and
             </span>
 
-            <span className="ticker-accent mr-14 inline-flex h-10 w-10 items-center justify-center text-pink-200/75" style={{ animationDelay: "2s" }}>✺</span>
+            <span className="ticker-accent mr-14 inline-flex h-10 w-10 items-center justify-center text-pink-200/75">✺</span>
 
-            <span className="ticker-word mr-24 text-[clamp(52px,7.6vw,128px)] font-light tracking-[0.05em] text-violet-200/90" style={{ animationDelay: "2.3s" }}>
+            <span className="ticker-word mr-24 text-[clamp(52px,7.6vw,128px)] font-light tracking-[0.05em] text-violet-200/90">
               monke
             </span>
 
-            <svg className="ticker-curve mx-12 h-10 w-28 text-cyan-300/70" viewBox="0 0 120 30" fill="none" aria-hidden style={{ animationDelay: "2.8s" }}>
-              <path d="M3 14C20 14 18 5 35 5C52 5 50 25 67 25C84 25 82 8 99 8H117" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <span className="mx-12 text-cyan-300/40 text-[50px]">~</span>
 
             <span className="inline-flex items-center pr-[45vw]">
-              <span className="ticker-accent relative h-[clamp(72px,8.2vw,122px)] w-[clamp(72px,8.2vw,122px)] overflow-hidden rounded-full border border-cyan-300/35 bg-[#050a1a]/80 shadow-[0_0_28px_rgba(96,165,250,0.3)]" style={{ animationDelay: "3.1s" }}>
+              <span className="ticker-accent relative h-[clamp(72px,8.2vw,122px)] w-[clamp(72px,8.2vw,122px)] overflow-hidden rounded-full border border-cyan-300/35 bg-black" style={{ transform: "translateZ(0)" }}>
                 <Image
                   src="/monkey-logo.jpeg"
                   alt="Monkey logo"
                   fill
+                  priority // Load the logo early
                   sizes="(max-width: 768px) 72px, 122px"
                   className="object-cover"
                 />

@@ -166,13 +166,14 @@ const Grainient: React.FC<GrainientProps> = ({
       webgl: 2,
       alpha: true,
       antialias: false,
-      dpr: Math.min(window.devicePixelRatio || 1, 2),
+      dpr: 1.0, // Reduced from Math.min(window.devicePixelRatio || 1, 2) to 1.0 for performance
     });
 
     const gl = renderer.gl;
     const canvas = gl.canvas as HTMLCanvasElement;
     canvas.style.width = "100%";
     canvas.style.height = "100%";
+    canvas.style.imageRendering = "pixelated"; // Helps hide lower resolution
     canvas.style.display = "block";
 
     const container = containerRef.current;

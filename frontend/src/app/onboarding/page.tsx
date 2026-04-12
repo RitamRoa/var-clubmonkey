@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TextType from "@/components/TextType";
 import SpotlightCard from "@/components/SpotlightCard";
+import Aurora from "@/components/Aurora";
 
 const AVAILABLE_INTERESTS = [
   "AI",
@@ -32,7 +33,53 @@ export default function Onboarding() {
   const [showIntro, setShowIntro] = useState(true);
   const [introFading, setIntroFading] = useState(false);
   const [onboardingVisible, setOnboardingVisible] = useState(false);
+  const [displayedIntroText, setDisplayedIntroText] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (!showIntro) return;
+
+    const messages = [
+      "welcome to club monkey",
+      "what you like.. you choose...<3",
+      "no judgement from anyone ;)",
+    ];
+    let msgIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timer: NodeJS.Timeout;
+
+    const type = () => {
+      const currentMsg = messages[msgIndex];
+      if (isDeleting) {
+        setDisplayedIntroText(currentMsg.substring(0, charIndex - 1));
+        charIndex--;
+      } else {
+        setDisplayedIntroText(currentMsg.substring(0, charIndex + 1));
+        charIndex++;
+      }
+
+      let speed = isDeleting ? 40 : 80;
+
+      if (!isDeleting && charIndex === currentMsg.length) {
+        if (msgIndex === messages.length - 1) {
+          setTimeout(handleIntroComplete, 1200);
+          return;
+        }
+        speed = 1500;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        msgIndex++;
+        speed = 500;
+      }
+
+      timer = setTimeout(type, speed);
+    };
+
+    timer = setTimeout(type, 1000);
+    return () => clearTimeout(timer);
+  }, [showIntro]);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -93,32 +140,27 @@ export default function Onboarding() {
 
   if (showIntro) {
     return (
-      <main className="relative min-h-screen overflow-hidden bg-black p-6 text-white md:p-10">
+      <main className="relative min-h-screen flex items-center justify-center bg-[#010208] p-6 text-white overflow-hidden">
+        <div className="absolute inset-0 z-0 opacity-40">
+          <Aurora
+            colorStops={["#00f2ff", "#7000ff", "#ff0080"]} // Cyan, Deep Purple, Hot Pink
+            blend={0.5}
+            amplitude={1.0}
+            speed={0.8}
+          />
+        </div>
         <div
-          className={`relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl items-center justify-center transition-opacity duration-500 ${
+          className={`relative z-10 w-full max-w-4xl transition-opacity duration-700 ${
             introFading ? "opacity-0" : "opacity-100"
           }`}
         >
-          <div className="w-full rounded-[30px] border border-white/10 bg-black">
-            <div className="min-h-[320px] px-6 py-14 text-left md:min-h-[360px] md:px-12">
-              <TextType
-                as="h1"
-                className="max-w-5xl text-4xl font-bold leading-[1.15] text-white md:text-7xl"
-                text={[
-                  "welcome to club monkey",
-                  "what you like.. you choose...<3",
-                  "no judgement from anyone ;)",
-                ]}
-                typingSpeed={56}
-                pauseDuration={1350}
-                deletingSpeed={36}
-                showCursor
-                cursorCharacter="|"
-                cursorBlinkDuration={0.55}
-                loop={false}
-                onComplete={handleIntroComplete}
-              />
-            </div>
+          <div className="min-h-[280px] flex items-center">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+              <span className="inline-block min-h-[1.2em]">
+                {displayedIntroText}
+              </span>
+              <span className="inline-block ml-1 animate-pulse font-light text-zinc-500">|</span>
+            </h1>
           </div>
         </div>
       </main>
@@ -127,59 +169,70 @@ export default function Onboarding() {
 
   return (
     <main
-      className={`relative min-h-screen overflow-hidden bg-[#04060f] p-6 text-white transition-opacity duration-700 md:p-10 ${
-        onboardingVisible ? "opacity-100" : "opacity-0"
-      }`}
+      className="min-h-screen relative bg-[#010208] text-white p-6 md:p-12 font-sans selection:bg-cyan-500/30 overflow-x-hidden"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(114,156,255,0.22),transparent_45%),radial-gradient(circle_at_88%_10%,rgba(255,68,68,0.16),transparent_42%)]" />
+      {/* Background Aurora */}
+      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none grayscale">
+        <Aurora
+          colorStops={["#ffffff", "#27272a", "#000000"]} 
+          blend={0.9}
+          amplitude={0.5}
+          speed={0.3}
+        />
+      </div>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-7xl items-center justify-center">
-        <SpotlightCard
-          className="w-full max-w-[1120px]"
-          spotlightColor="rgba(0, 229, 255, 0.17)"
-        >
-          <div className="px-5 py-12 text-center md:px-16 md:py-16">
-            <h1 className="text-5xl font-bold tracking-tight md:text-7xl">What are you into?</h1>
-            <p className="mb-10 mt-5 text-zinc-300/70 md:text-lg">
-              Select your domains to personalize your hub.
-            </p>
+      <div className="max-w-4xl mx-auto pt-10 md:pt-20 relative z-10">
+        <header className="mb-14 space-y-1">
+          <h1 className="text-2xl font-medium tracking-tight">
+            Select Interests
+          </h1>
+          <p className="text-zinc-600 text-xs uppercase tracking-widest">
+            {selected.length} Selected
+          </p>
+        </header>
 
-            <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-3.5 md:gap-4">
-              {AVAILABLE_INTERESTS.map((interest) => (
-                <button
-                  key={interest}
-                  type="button"
-                  onClick={() => toggleInterest(interest)}
-                  className={`rounded-full border px-7 py-3 text-lg tracking-[0.01em] transition-all duration-200 md:text-[1.03rem] ${
-                    selected.includes(interest)
-                      ? "!border-blue-200/70 !bg-[linear-gradient(180deg,rgba(114,156,255,0.3),rgba(88,128,240,0.22))] !text-white shadow-[0_0_28px_rgba(125,170,255,0.42)]"
-                      : "border-slate-300/25 bg-[#18243f]/58 text-zinc-100 shadow-[0_0_22px_rgba(97,140,255,0.26)] hover:border-slate-300/45 hover:bg-[#1d2d4d]/72"
-                  }`}
-                  aria-pressed={selected.includes(interest)}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      className={`text-sm ${selected.includes(interest) ? "text-blue-50" : "text-blue-200/80"}`}
-                    >
-                      {"\u2726"}
-                    </span>
-                    <span className="text-sm text-blue-200/65">{"\u2726"}</span>
-                    {interest}
-                  </span>
-                </button>
-              ))}
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+          {AVAILABLE_INTERESTS.map((interest) => {
+            const isActive = selected.includes(interest);
+            return (
+              <button
+                key={interest}
+                onClick={() => toggleInterest(interest)}
+                className={`
+                  group relative px-5 py-4 rounded-lg text-left transition-all duration-300
+                  active:scale-[0.98]
+                  ${isActive 
+                    ? "bg-white text-black" 
+                    : "bg-transparent text-zinc-600 hover:text-zinc-300"
+                  }
+                `}
+              >
+                <span className="text-sm font-medium tracking-tight">
+                  {interest}
+                </span>
+                {isActive && (
+                  <div className="absolute top-1 right-2 text-[10px] font-bold">✓</div>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-            <button
-              onClick={handleFinish}
-              disabled={selected.length === 0 || saving}
-              className="mt-14 rounded-full border border-slate-200/35 bg-[#2f3d5f]/58 px-14 py-4 text-[2.15rem] font-semibold text-white shadow-[0_0_20px_rgba(114,156,255,0.3)] transition-all duration-200 hover:bg-[#394a73]/72 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span className="mr-2 text-blue-200/70">{"\u2726"}</span>
-              {saving ? "Saving..." : "Done"}
-            </button>
-          </div>
-        </SpotlightCard>
+        <footer className="mt-16 flex flex-col items-center">
+          <button
+            onClick={handleFinish}
+            disabled={selected.length === 0 || saving}
+            className={`
+              px-12 py-3 rounded-md text-xs font-semibold uppercase tracking-widest transition-all duration-500
+              ${selected.length > 0 
+                ? "bg-white text-black hover:bg-zinc-200" 
+                : "text-zinc-700 cursor-not-allowed"
+              }
+            `}
+          >
+            {saving ? "..." : "Next"}
+          </button>
+        </footer>
       </div>
     </main>
   );

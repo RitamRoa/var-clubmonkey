@@ -58,20 +58,7 @@ export default function AuthPage({
   const [loading, setLoading] = useState<"user" | "admin" | null>(null);
   const [showTransitionOverlay, setShowTransitionOverlay] = useState(false);
 
-  const stars = useMemo<Star[]>(() => {
-    return Array.from({ length: 140 }, (_, i) => {
-      const base = i + 1;
-      return {
-        left: pseudoRandom(base * 1.91) * 100,
-        top: pseudoRandom(base * 2.83) * 100,
-        size: 0.5 + pseudoRandom(base * 3.37) * 2,
-        opacity: 0.2 + pseudoRandom(base * 4.21) * 0.65,
-        delay: pseudoRandom(base * 5.29) * 6,
-        duration: 2.8 + pseudoRandom(base * 6.13) * 4,
-        color: STAR_COLORS[Math.floor(pseudoRandom(base * 7.03) * STAR_COLORS.length)],
-      };
-    });
-  }, []);
+  const stars = useMemo<Star[]>(() => [], []);
 
   useEffect(() => {
     if (sessionStorage.getItem("cm-auth-transition") === "1") {
@@ -147,140 +134,77 @@ export default function AuthPage({
       />
 
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-[#0f0f1e] to-[#010208]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(30,64,175,0.12)_0%,rgba(30,64,175,0)_40%),radial-gradient(circle_at_80%_15%,rgba(59,130,246,0.08)_0%,rgba(59,130,246,0)_45%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_62%_72%,rgba(167,139,250,0.12)_0%,rgba(167,139,250,0)_38%),radial-gradient(circle_at_24%_78%,rgba(96,165,250,0.09)_0%,rgba(96,165,250,0)_40%)]" />
-
-        <div className="absolute inset-0 opacity-45">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020410] via-[#010208] to-[#010208]" />
+        
+        {/* Enhanced Aurora (Re-added and popped with colors) */}
+        <div className="absolute inset-0 opacity-70 mix-blend-screen overflow-hidden">
           <Aurora
-            colorStops={["#8080ff", "#000080", "#ff0000"]}
-            blend={0.5}
-            amplitude={1.0}
-            speed={1}
+            colorStops={["#3b82f6", "#8b5cf6", "#ec4899"]} // Vibrant Blue, Purple, Pink
+            blend={0.6}
+            amplitude={1.2}
+            speed={1.2}
           />
         </div>
 
-        <div className="absolute inset-0 opacity-82">
-          <PixelBlast
-            variant="square"
-            pixelSize={4}
-            color="#B19EEF"
-            patternScale={2}
-            patternDensity={1}
-            pixelSizeJitter={0}
-            enableRipples
-            rippleSpeed={0.4}
-            rippleThickness={0.12}
-            rippleIntensityScale={1.5}
-            liquid={false}
-            liquidStrength={0.12}
-            liquidRadius={1.2}
-            liquidWobbleSpeed={5}
-            speed={0.5}
-            edgeFade={0.25}
-            transparent
-          />
-        </div>
+        {/* Simplified Background Glows */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(30,64,175,0.12)_0%,rgba(30,64,175,0)_50%),radial-gradient(circle_at_80%_15%,rgba(59,130,246,0.08)_0%,rgba(59,130,246,0)_50%)]" />
 
-        <div className="absolute inset-0 opacity-60 mix-blend-screen">
-          <Grainient
-            className="h-full w-full"
-            color1="#060a1a"
-            color2="#0a1c45"
-            color3="#251048"
-            timeSpeed={0.16}
-            colorBalance={0}
-            warpStrength={0.34}
-            warpFrequency={7.1}
-            warpSpeed={2.4}
-            warpAmplitude={32}
-            blendAngle={0}
-            blendSoftness={0.14}
-            rotationAmount={360}
-            noiseScale={1.5}
-            grainAmount={0.03}
-            grainScale={2}
-            grainAnimated={false}
-            contrast={1.45}
-            gamma={0.9}
-            saturation={0.86}
-            centerX={0}
-            centerY={0}
-            zoom={0.95}
-          />
-        </div>
-
-        {stars.map((star, index) => (
-          <span
-            key={index}
-            className="auth-star absolute rounded-full"
-            style={{
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              opacity: star.opacity,
-              animationDelay: `${star.delay}s`,
-              animationDuration: `${star.duration}s`,
-              backgroundColor: star.color,
-              boxShadow: `0 0 ${7 + star.size}px ${star.color}66`,
-            }}
-          />
-        ))}
+        {/* Stars removed for Aurora to pop */}
 
         <div className="absolute inset-0 auth-vignette" />
       </div>
 
       <div
         className={cn(
-          "relative z-10 flex w-full max-w-sm flex-col gap-6 auth-card-enter",
+          "relative z-10 flex w-full max-w-sm flex-col gap-6",
           className,
         )}
         {...props}
       >
-        <Card className="border border-blue-500/20 bg-[#050811]/85 text-zinc-50 shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-md">
+        <Card className="border border-white/5 bg-black/40 text-zinc-50 backdrop-blur-sm transition-all duration-300">
           <CardHeader className="space-y-1">
             <div className="mb-3 flex justify-center">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-cyan-300/35 shadow-[0_0_22px_rgba(96,165,250,0.35)]">
+              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/10 shadow-lg">
                 <Image
                   src="/monkey-logo.jpeg"
                   alt="Club Monkey logo"
                   fill
+                  priority
                   sizes="48px"
                   className="object-cover"
                 />
               </div>
             </div>
 
-            <CardTitle className="text-center text-3xl font-bold tracking-tight text-white">
+            <CardTitle className="text-center text-2xl font-semibold tracking-tight text-white">
               ClubMonkey
             </CardTitle>
-            <CardDescription className="text-center text-blue-100/70">
+            <CardDescription className="text-center text-zinc-400">
               Sign in to manage or explore clubs
             </CardDescription>
           </CardHeader>
 
           <CardContent className="grid gap-4">
             {error && (
-              <div className="rounded-md border border-red-400/50 bg-red-500/10 p-3 text-center text-xs text-red-300 animate-in fade-in zoom-in duration-300">
+              <div className="rounded-md border border-red-400/20 bg-red-500/5 p-3 text-center text-[11px] text-red-400/90">
                 {error}
               </div>
             )}
 
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               <Button
                 variant="outline"
-                className="h-11 w-full border-blue-400/20 bg-[#0b1120]/85 text-blue-50 hover:bg-[#131c33]"
+                className="h-12 w-full border-white/5 bg-white/5 text-zinc-100 transition-all hover:bg-white/10 active:scale-[0.98]"
                 onClick={() => handleGoogleAuth("user")}
                 disabled={loading !== null}
               >
                 {loading === "user" ? (
                   <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-400 border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                     Signing in...
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center gap-2">
+                  <span className="flex items-center justify-center gap-2 font-medium">
                     <svg className="h-4 w-4" viewBox="0 0 24 24">
                       <path
                         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -304,25 +228,26 @@ export default function AuthPage({
                 )}
               </Button>
 
-              <div className="relative">
+              <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-blue-500/20" />
+                  <span className="w-full border-t border-white/5" />
                 </div>
-                <div className="relative flex justify-center text-[10px] uppercase">
-                  <span className="bg-[#050811] px-2 font-medium tracking-widest text-blue-200/40">
-                    Authorized Personnel Only
+                <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em]">
+                  <span className="bg-transparent px-2 text-zinc-600">
+                    Personnel Only
                   </span>
                 </div>
               </div>
 
               <Button
-                className="h-11 w-full bg-blue-50 text-[#0b1120] font-semibold transition-all duration-200 hover:bg-blue-100 active:scale-95"
+                variant="ghost"
+                className="h-11 w-full border border-white/5 bg-transparent text-zinc-400 transition-all hover:bg-white/5 hover:text-white active:scale-[0.98]"
                 onClick={() => handleGoogleAuth("admin")}
                 disabled={loading !== null}
               >
                 {loading === "admin" ? (
                   <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-900 border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
                     Verifying...
                   </span>
                 ) : (
@@ -331,13 +256,10 @@ export default function AuthPage({
               </Button>
             </div>
 
-            <p className="px-8 text-center text-xs leading-relaxed text-blue-100/45">
+            <p className="px-8 text-center text-[10px] uppercase tracking-wide text-zinc-600">
               By continuing, you agree to our{" "}
-              <a
-                href="#"
-                className="underline underline-offset-4 transition-colors hover:text-blue-100/80"
-              >
-                Terms of Service
+              <a href="#" className="underline underline-offset-4 hover:text-zinc-400">
+                Terms
               </a>
               .
             </p>
