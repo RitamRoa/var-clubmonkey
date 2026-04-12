@@ -19,7 +19,7 @@ It includes:
 	- Post upvote toggles on club pages
 	- Profile stats (Joined Clubs, Upvotes, Following)
 	- Update interests from profile
-- Collaboration hub with project listing and aurora-themed UI
+- Collaboration hub with project listing
 - Tiny toast feedback for key actions
 
 ## Make It Work
@@ -61,6 +61,4 @@ Create local env files from examples (do not commit real secrets):
 copy .env.example .env
 copy frontend\.env.example frontend\.env
 ```
-
-Both `.env` files are ignored by git, while `.env.example` files are committed.
 
