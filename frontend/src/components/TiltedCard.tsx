@@ -10,6 +10,7 @@ interface TiltedCardProps {
   imageSrc: ComponentProps<"img">["src"];
   altText?: string;
   captionText?: string;
+  captionStyle?: CSSProperties;
   containerHeight?: CSSProperties["height"];
   containerWidth?: CSSProperties["width"];
   imageHeight?: CSSProperties["height"];
@@ -32,6 +33,7 @@ export default function TiltedCard({
   imageSrc,
   altText = "Tilted card image",
   captionText = "",
+  captionStyle,
   containerHeight = "300px",
   containerWidth = "100%",
   imageHeight = "300px",
@@ -144,6 +146,7 @@ export default function TiltedCard({
             y,
             opacity,
             rotate: rotateFigcaption,
+            ...captionStyle,
           }}
         >
           {captionText}

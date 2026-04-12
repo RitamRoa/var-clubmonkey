@@ -1,0 +1,148 @@
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 12px;
+  --outer-r: 18px;
+  --p-distance: 10px;
+  background: #050506;
+}
+
+.carousel-track {
+  display: flex;
+}
+
+.carousel-item {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: calc(var(--outer-r) - var(--p-distance));
+  background-color: #090a0b;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.carousel-item:active {
+  cursor: grabbing;
+}
+
+.carousel-container.round {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.carousel-item.round {
+  background-color: #090a0b;
+  position: relative;
+  bottom: 0.1em;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.carousel-item-header.round {
+  padding: 0;
+  margin: 0;
+}
+
+.carousel-indicators-container.round {
+  position: absolute;
+  z-index: 2;
+  bottom: 3em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.carousel-indicator.active {
+  background-color: #333333;
+}
+
+.carousel-indicator.inactive {
+  background-color: rgba(51, 51, 51, 0.4);
+}
+
+.carousel-item-header {
+  margin-bottom: 8px;
+  padding: 16px;
+  padding-top: 16px;
+}
+
+.carousel-icon-container {
+  display: flex;
+  height: 30px;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f4f4f5;
+}
+
+.carousel-icon {
+  height: 15px;
+  width: 15px;
+  color: #111318;
+}
+
+.carousel-item-content {
+  padding: 16px;
+  padding-bottom: 16px;
+}
+
+.carousel-item-title {
+  margin-bottom: 6px;
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1;
+  color: #fff;
+}
+
+.carousel-item-description {
+  font-size: 32px;
+  line-height: 1.12;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.carousel-indicators-container {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.carousel-indicators {
+  margin-top: 12px;
+  display: flex;
+  width: 96px;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.carousel-indicator {
+  height: 9px;
+  width: 9px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+
+.carousel-indicator.active {
+  background-color: #fff;
+}
+
+.carousel-indicator.inactive {
+  background-color: rgba(255, 255, 255, 0.34);
+}
+
+@media (max-width: 640px) {
+  .carousel-item-title {
+    font-size: 28px;
+  }
+
+  .carousel-item-description {
+    font-size: 24px;
+  }
+}

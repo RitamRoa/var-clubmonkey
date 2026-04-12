@@ -47,6 +47,7 @@ export default function RecommendedClubs() {
               imageSrc={getClubVisual(club)}
               altText={`${club.name} card`}
               captionText={club.name}
+              captionStyle={getTooltipPillStyle(club)}
               containerHeight="330px"
               containerWidth="100%"
               imageHeight="330px"
@@ -57,7 +58,9 @@ export default function RecommendedClubs() {
               showTooltip
               displayOverlayContent
               overlayContent={
-                <p className="tilted-card-demo-text">{club.name}</p>
+                <p className="tilted-card-demo-text" style={getTitlePillStyle(club)}>
+                  {club.name}
+                </p>
               }
             />
 
@@ -103,43 +106,57 @@ interface Club {
 }
 
 function getClubVisual(club: Club): string {
-  if (club.logo_url && club.logo_url.trim().length > 0) {
-    return club.logo_url;
-  }
-
-  const p = normalizeColor(club.primary_color, "#121826");
-  const a = normalizeColor(club.accent_color, "#4f46e5");
-  const text = (club.name || "Club").slice(0, 30);
+  const p = normalizeColor(club.primary_color, "#1d3557");
+  const a = normalizeColor(club.accent_color, "#e11d48");
+  const text = getFirstTwoWords(club.name || "Club").slice(0, 24);
 
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='900' viewBox='0 0 1200 900'>
     <defs>
-      <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+      <linearGradient id='line' x1='0' y1='0' x2='1' y2='0'>
         <stop offset='0%' stop-color='${p}'/>
-        <stop offset='55%' stop-color='#0a1020'/>
         <stop offset='100%' stop-color='${a}'/>
       </linearGradient>
-      <radialGradient id='spot1' cx='22%' cy='20%' r='60%'>
-        <stop offset='0%' stop-color='#ffffff' stop-opacity='0.18'/>
-        <stop offset='100%' stop-color='#ffffff' stop-opacity='0'/>
-      </radialGradient>
-      <radialGradient id='spot2' cx='82%' cy='10%' r='48%'>
-        <stop offset='0%' stop-color='${a}' stop-opacity='0.45'/>
-        <stop offset='100%' stop-color='${a}' stop-opacity='0'/>
-      </radialGradient>
     </defs>
-    <rect width='1200' height='900' fill='url(#bg)'/>
-    <rect width='1200' height='900' fill='url(#spot1)'/>
-    <rect width='1200' height='900' fill='url(#spot2)'/>
-    <rect x='90' y='96' rx='38' ry='38' width='620' height='120' fill='rgba(18,20,32,0.58)' stroke='rgba(255,255,255,0.2)'/>
-    <text x='136' y='170' fill='rgba(244,246,255,0.96)' font-size='58' font-family='Arial, sans-serif' font-weight='700'>${escapeXml(text)}</text>
+    <rect width='1200' height='900' fill='#020308'/>
+    <rect x='120' y='755' width='960' height='6' rx='3' fill='url(#line)' opacity='0.9'/>
+    <text x='600' y='468' text-anchor='middle' fill='rgba(244,246,255,0.98)' font-size='118' font-family='Arial, sans-serif' font-weight='800' letter-spacing='1.2'>${escapeXml(text)}</text>
   </svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+function getFirstTwoWords(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words.slice(0, 2).join(" ") || name;
+}
+
 function normalizeColor(value: string | undefined, fallback: string): string {
   if (!value || !value.trim()) return fallback;
   return value;
+}
+
+function getTitlePillStyle(club: Club): React.CSSProperties {
+  const primary = normalizeColor(club.primary_color, "#1d3557");
+  const accent = normalizeColor(club.accent_color, "#e11d48");
+
+  return {
+    background: `linear-gradient(180deg, rgba(7,10,18,0.24), rgba(7,10,18,0.24)), linear-gradient(90deg, ${primary} 0%, ${accent} 100%)`,
+    borderColor: "rgba(255,255,255,0.24)",
+    color: "#f8fafc",
+    textShadow: "0 1px 10px rgba(0,0,0,0.35)",
+  };
+}
+
+function getTooltipPillStyle(club: Club): React.CSSProperties {
+  const primary = normalizeColor(club.primary_color, "#1d3557");
+  const accent = normalizeColor(club.accent_color, "#e11d48");
+
+  return {
+    background: `linear-gradient(180deg, rgba(7,10,18,0.2), rgba(7,10,18,0.2)), linear-gradient(90deg, ${primary} 0%, ${accent} 100%)`,
+    borderColor: "rgba(255,255,255,0.28)",
+    color: "#f8fafc",
+    textShadow: "0 1px 8px rgba(0,0,0,0.4)",
+  };
 }
 
 function escapeXml(input: string): string {
